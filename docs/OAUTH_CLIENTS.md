@@ -59,6 +59,8 @@ If the UI says *“authentication method that Gemini doesn’t support”*, you 
 
 Ask your Scardus admin to run `ensure_mcp_oauth_gemini_clients` if Client ID `gemini-tenant-mcp` is unknown on the server.
 
+**If Gemini still asks you to paste `sk_live_…` after Sign-in:** the host already holds the OAuth token — do not paste keys into chat. Enable/reload **Actions** on the connector, open the chat **sources** picker → **Authorize** / toggle on the Tenant MCP connector, reload, and start a **new chat**. Then ask for active projects again (`projects_list`).
+
 ### Connected Apps / Spark (URL discovery)
 
 MCP URL `https://ticket.scardustech.com/tenant-mcp`. Discovery uses `401` + `WWW-Authenticate: Bearer resource_metadata=…` and public well-known under `/tenant-mcp/.well-known/` plus `/.well-known/oauth-protected-resource/tenant-mcp`.

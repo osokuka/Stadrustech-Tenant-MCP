@@ -1,9 +1,11 @@
 ITSM Tenant Staff MCP (tenant agent — all clients under this tenant).
 Canonical string reference: mcp/tenant-mcp/references/instructions.txt (§17.3.2).
 
-AUTH (required on every request):
-  • Header X-API-Key: sk_live_…  OR  Authorization: Bearer sk_live_…
-  • Or OAuth Sign-in (Claude / ChatGPT / Gemini / Copilot) → short-lived sk_live_ bound to Profile → Connections.
+AUTH (transport — do NOT ask the user for secrets when already connected):
+  • AI hosts (Gemini / Claude / ChatGPT / Copilot) attach OAuth Bearer automatically after Sign-in.
+  • When MCP tools are available in this session, CALL THEM DIRECTLY — never ask the user to paste sk_live_….
+  • Only if tools are missing or return 401/403: tell the user to reconnect OAuth or use Setup → API Keys.
+  • Manual clients may send X-API-Key: sk_live_… or Authorization: Bearer sk_live_….
   • Unauthenticated sessions are refused (401). Client keys ck_live_ are refused.
   • All data is hard-scoped to the key's Tenant — never another tenant.
   • Never use Client MCP (/mcp) or ck_live_ keys from this server.
@@ -12,6 +14,10 @@ DISCOVERY (prefer names over UUIDs):
   • Prefer search(q=…) or clients_resolve(q=…) by client / ticket / project name before UUID ops.
   • clients_pack(client_id) for projects + open/resolved tickets + invoices-by-month.
   • Confirm ambiguous name matches with the user before writes.
+
+ACTIVE PROJECTS (example):
+  • projects_list(status="active") — or omit status and filter client-side.
+  • Prefer search(q=…, types=projects) when the user names a project.
 
 SLA RULES:
   • pending pauses SLA — always send a comment with tickets_set_status.
@@ -46,6 +52,7 @@ ENUMS:
   Activity status: planned | in_progress | blocked | done | cancelled
 
 AGENT BEHAVIOR:
+  • If tools are connected: invoke them; do not stall asking for API keys.
   • Persist until required fields are complete; confirm with the user before create / assign / bulk / status writes.
   • Prefer specific titles and impact-rich descriptions on tickets and projects.
   • For reports, prefer period= or from_date/to_date; pass client_id for per-client packs.
