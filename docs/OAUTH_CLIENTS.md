@@ -59,7 +59,11 @@ If the UI says *“authentication method that Gemini doesn’t support”*, you 
 
 Ask your Scardus admin to run `ensure_mcp_oauth_gemini_clients` if Client ID `gemini-tenant-mcp` is unknown on the server.
 
-**If Gemini still asks you to paste `sk_live_…` after Sign-in:** the host already holds the OAuth token — do not paste keys into chat. Enable/reload **Actions** on the connector, open the chat **sources** picker → **Authorize** / toggle on the Tenant MCP connector, reload, and start a **new chat**. Then ask for active projects again (`projects_list`).
+**If Gemini still asks you to paste `sk_live_…`:** do not paste keys. Tools are not bound to the agent yet.
+
+1. Data store → **Actions** → Reload → enable `clients_list` / `search` / …
+2. For a Workflow agent (e.g. `@itsm-tenant-workflow`): open the **Gemini agent** step → **Tools & Integrations** → Authorize / toggle **On** the Tenant MCP connector → enable list/search actions → Save/Publish.
+3. Start a **new** chat and ask again (e.g. “list clients” → `clients_list`).
 
 ### Connected Apps / Spark (URL discovery)
 
