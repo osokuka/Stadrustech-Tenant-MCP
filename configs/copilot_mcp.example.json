@@ -1,0 +1,10 @@
+{
+  "mcpServer": {
+    "name": "itsm-tenant",
+    "url": "https://ticket.scardustech.com/tenant-mcp",
+    "authentication": "oauth_or_api_key",
+    "apiKeyHeader": "X-API-Key",
+    "apiKeyExample": "sk_live_YOUR_KEY_HERE",
+    "notes": "Use OAuth Sign-in when configuring Copilot Studio / Agents Toolkit. Sign in as tenant staff. Revoke under Profile → Connections."
+  }
+}

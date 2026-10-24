@@ -1,0 +1,10 @@
+{
+  "name": "itsm-tenant",
+  "url": "https://ticket.scardustech.com/tenant-mcp",
+  "auth": {
+    "type": "header",
+    "header": "X-API-Key",
+    "value": "sk_live_YOUR_KEY_HERE"
+  },
+  "notes": "Prefer OAuth Sign-in with MCP URL https://ticket.scardustech.com/tenant-mcp (tenant staff login). Header auth is the API-key alternative."
+}

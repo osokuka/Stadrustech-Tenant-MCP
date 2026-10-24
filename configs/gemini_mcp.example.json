@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "itsm-tenant": {
+      "url": "https://ticket.scardustech.com/tenant-mcp",
+      "headers": {
+        "X-API-Key": "sk_live_YOUR_KEY_HERE"
+      }
+    }
+  },
+  "notes": "Enterprise custom MCP can use OAuth Sign-in against the same URL with a tenant staff account."
+}
