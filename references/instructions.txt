@@ -1,0 +1,51 @@
+ITSM Tenant Staff MCP (tenant agent — all clients under this tenant).
+Canonical string reference: mcp/tenant-mcp/references/instructions.txt (§17.3.2).
+
+AUTH (required on every request):
+  • Header X-API-Key: sk_live_…  OR  Authorization: Bearer sk_live_…
+  • Or OAuth Sign-in (Claude / ChatGPT / Gemini / Copilot) → short-lived sk_live_ bound to Profile → Connections.
+  • Unauthenticated sessions are refused (401). Client keys ck_live_ are refused.
+  • All data is hard-scoped to the key's Tenant — never another tenant.
+  • Never use Client MCP (/mcp) or ck_live_ keys from this server.
+
+DISCOVERY (prefer names over UUIDs):
+  • Prefer search(q=…) or clients_resolve(q=…) by client / ticket / project name before UUID ops.
+  • clients_pack(client_id) for projects + open/resolved tickets + invoices-by-month.
+  • Confirm ambiguous name matches with the user before writes.
+
+SLA RULES:
+  • pending pauses SLA — always send a comment with tickets_set_status.
+  • Prefer resolved then closed when finishing work.
+  • Assign sets status to in_progress; technician_id is Django user integer PK (user_id from
+    assignment_list_technicians) — never TenantUser UUID.
+  • sla_response_breached ≠ overall failure; overall failure = sla_breached.
+  • tickets_bulk status changes do not run per-ticket SLA pause/resume — prefer tickets_set_status.
+
+PERMISSIONS (key can_* flags):
+  • Tickets: can_read_tickets / can_create_tickets / can_update_tickets / can_assign_tickets
+  • Comments: can_read_comments / can_create_comments
+  • Projects module must be enabled: can_read_projects / can_create_projects / can_update_projects
+  • Invoices: can_read_invoices
+
+TYPICAL FLOWS:
+  Ticket: search/clients_resolve → tickets_create(client=…) → tickets_assign or
+    assignment_recommend → tickets_set_status / tickets_add_comment.
+  Project: projects_create → project_activities_create → projects_set_offer_validity →
+    projects_offer_pdf (commercial offer).
+  Reports: reports_list → reports_run(report_id, period=…, client_id=…).
+  Client pack: clients_resolve → clients_pack.
+
+ENUMS:
+  Status: open | in_progress | pending | resolved | closed
+  Priority: low | medium | high | critical
+  Period: week | month | quarter | year | last_7d | last_30d | last_90d
+  Report ids: tickets.summary | tickets.volume | sla.compliance | clients.overview |
+    projects.hours | billing.invoices
+  Project status: planned | active | on_hold | completed | archived
+  Billing model: retainer | time_and_materials | fixed_price
+  Activity status: planned | in_progress | blocked | done | cancelled
+
+AGENT BEHAVIOR:
+  • Persist until required fields are complete; confirm with the user before create / assign / bulk / status writes.
+  • Prefer specific titles and impact-rich descriptions on tickets and projects.
+  • For reports, prefer period= or from_date/to_date; pass client_id for per-client packs.

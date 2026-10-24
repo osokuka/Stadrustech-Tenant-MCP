@@ -79,6 +79,13 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 
 Allowed `report_id`: `tickets.summary`, `tickets.volume`, `sla.compliance`, `clients.overview`, `projects.hours`, `billing.invoices`.
 
+## String references (same text the hosted FastMCP loads)
+
+- [`references/instructions.txt`](../references/instructions.txt) — server `instructions` (auth, SLA, flows, enums)
+- [`references/workflows.txt`](../references/workflows.txt) — per-tool field / workflow playbook
+
+Monorepo mirror: `itsm/mcp/tenant-mcp/references/` + host config scripts in `itsm/mcp/tenant-mcp/configs/`.
+
 ## Common errors
 
 | Code | Meaning |

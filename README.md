@@ -106,6 +106,7 @@ Prefer **Sign in** in the host’s connector UI with MCP URL `https://ticket.sca
 - [MCP tools](docs/TOOLS.md)
 - [OAuth clients](docs/OAUTH_CLIENTS.md)
 - Config examples under [`configs/`](configs/)
+- FastMCP string refs (same text the hosted server loads): [`references/instructions.txt`](references/instructions.txt), [`references/workflows.txt`](references/workflows.txt)
 
 ## Related
 

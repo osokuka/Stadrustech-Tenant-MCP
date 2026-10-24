@@ -1,0 +1,51 @@
+Hosted Tenant MCP — workflow string references (§17.3.2)
+Source of truth for agents + FastMCP tool docstrings. Keep in sync with
+workingscope/AI_FASTMCP_TOOLS.md and Stadrustech-Tenant-MCP docs/TOOLS.md.
+
+--- tickets.create ---
+Gather: title (required), description (preferred), client UUID from clients_resolve
+(preferred for SLA), priority (default medium), category (default incident),
+optional location UUID, optional external_reference.
+Requires can_create_tickets. Status starts open; source=api.
+
+--- tickets.set_status ---
+status=open|in_progress|pending|resolved|closed.
+pending REQUIRES comment (SLA pause). Prefer resolved then closed when finishing.
+is_internal_note hides comment from client portal. Needs can_update_tickets.
+
+--- tickets.assign ---
+technician_id = Django user PK (= technicians[].user_id from
+assignment_list_technicians). Sets status in_progress. Needs can_assign_tickets.
+Do NOT pass TenantUser UUID.
+
+--- assignment ---
+assignment_recommend scores only; assignment_auto_assign assigns best match
+(needs can_assign_tickets). Filter techs by role/location/city; include_workload=true
+by default.
+
+--- discovery ---
+search(q, types=clients,projects,tickets,invoices) for mixed lookup.
+clients_resolve(q) when the user names an organization.
+clients_pack(client_id, billing_cycle?) for workspace snapshot.
+
+--- projects ---
+projects_create needs name + client UUID; billing_model retainer|time_and_materials|
+fixed_price; optional dates YYYY-MM-DD; default_hourly_rate for activities.
+Projects module must be enabled or tools return 403.
+Offer flow: projects_set_offer_validity → projects_offer_pdf|html|xlsx (base64).
+
+--- activities / materials ---
+project_activities_create: project UUID, name, estimated_hours preferred;
+status planned→…→done. Materials: name, quantity, unit, unit_cost (staff can set costs).
+
+--- invoices ---
+Needs can_read_invoices. Filter by client UUID/name, billing_cycle, status,
+billing_kind, settlement, search. invoices_pdf returns base64 PDF.
+
+--- reports ---
+reports_list → reports_schema(report_id) → reports_run(report_id, period|from/to,
+optional client_id). clients.overview is tenant-staff only (not on Client MCP).
+
+--- errors ---
+401 missing/invalid key · 403 missing can_* / module off / wrong audience (ck_live_)
+· 404 not in this tenant · 400 validation / no SLA
