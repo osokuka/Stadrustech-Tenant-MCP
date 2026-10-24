@@ -21,7 +21,7 @@ Assist **tenant staff** through the **Hosted Tenant MCP** (`itsm-tenant`, `sk_li
 
 Tell the user clearly — either path works:
 
-**OAuth (Claude / ChatGPT / Gemini / Copilot):** add MCP URL `https://ticket.scardustech.com/tenant-mcp` → **Sign in** with a **tenant staff** account → revoke later under **Profile → Connections**.
+**OAuth (Claude / ChatGPT / Gemini / Copilot):** add MCP URL `https://ticket.scardustech.com/tenant-mcp` → **Sign in** with a **tenant staff** account → revoke later under **Profile → Connections**. **Gemini Enterprise:** paste OAuth fields from [docs/OAUTH_CLIENTS.md](../../../docs/OAUTH_CLIENTS.md) (Client ID `gemini-tenant-mcp`, PKCE, blank secret) — URL-only Connected Apps may reject auth.
 
 **API key (Cursor and any header-capable host):**
 

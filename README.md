@@ -97,6 +97,8 @@ Examples:
 
 Prefer **Sign in** in the host’s connector UI with MCP URL `https://ticket.scardustech.com/tenant-mcp`. Full steps: [docs/OAUTH_CLIENTS.md](docs/OAUTH_CLIENTS.md). Sign in as **tenant staff**; revoke under tenant **Profile → Connections**.
 
+**Gemini Enterprise:** does not support DCR — paste OAuth fields from [docs/OAUTH_CLIENTS.md](docs/OAUTH_CLIENTS.md) (Client ID `gemini-tenant-mcp`, PKCE on, secret blank). If Gemini says the auth method is unsupported, use the Enterprise Custom MCP **OAuth 2.0** form (not URL-only Connected Apps).
+
 ## Docs
 
 - [Agent skill](.cursor/skills/itsm-tenant-mcp-agent/SKILL.md)

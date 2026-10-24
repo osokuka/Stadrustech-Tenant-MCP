@@ -7,6 +7,7 @@ You can attach Scardus **Hosted Tenant MCP** to major AI hosts without pasting a
 | **MCP URL** | `https://ticket.scardustech.com/tenant-mcp` |
 | **Console** | `https://ticket.scardustech.com` |
 | **Who can sign in** | Tenant staff users only (not client portal accounts) |
+| **OAuth AS** | `https://ticket.scardustech.com/api/tenant-mcp-oauth/` |
 
 API keys (`sk_live_…`) still work for Cursor and any host that supports custom headers — see the root [README](../README.md).
 
@@ -38,9 +39,33 @@ Key-based example: [`configs/chatgpt_mcp.example.json`](../configs/chatgpt_mcp.e
 
 ## Google Gemini
 
-**Hosted / Enterprise custom MCP:** register `https://ticket.scardustech.com/tenant-mcp` in the Gemini admin UI and complete Google’s OAuth redirect.
+### Gemini Enterprise / Business (paste OAuth — no DCR)
 
-**Gemini CLI (loopback):** configure remote MCP with this URL + OAuth (or `sk_live_` header).
+Gemini Enterprise **does not support Dynamic Client Registration**. Choose **OAuth 2.0** (not “no authentication”) and paste:
+
+| Field | Value |
+|-------|--------|
+| MCP Server URL | `https://ticket.scardustech.com/tenant-mcp` |
+| Authorization URL | `https://ticket.scardustech.com/api/tenant-mcp-oauth/authorize` |
+| Token URL | `https://ticket.scardustech.com/api/tenant-mcp-oauth/token` |
+| Client ID | `gemini-tenant-mcp` |
+| Client Secret | *(leave blank)* |
+| Enable PKCE | **Yes** |
+| Scopes | `mcp:tools offline_access` |
+
+Sign in as a **tenant staff** user. Google’s redirect `https://vertexaisearch.cloud.google.com/oauth-redirect` is allowlisted on Scardus.
+
+If the UI says *“authentication method that Gemini doesn’t support”*, you are on a discovery-only flow — use the Enterprise **Custom MCP → OAuth 2.0** form with the table above (not URL-only Connected Apps).
+
+Ask your Scardus admin to run `ensure_mcp_oauth_gemini_clients` if Client ID `gemini-tenant-mcp` is unknown on the server.
+
+### Connected Apps / Spark (URL discovery)
+
+MCP URL `https://ticket.scardustech.com/tenant-mcp`. Discovery uses `401` + `WWW-Authenticate: Bearer resource_metadata=…` and public well-known under `/tenant-mcp/.well-known/` plus `/.well-known/oauth-protected-resource/tenant-mcp`.
+
+### Gemini CLI (loopback)
+
+Remote MCP with this URL + OAuth, or `sk_live_` header. Loopback callbacks are allowlisted.
 
 Key-based example: [`configs/gemini_mcp.example.json`](../configs/gemini_mcp.example.json).
 
@@ -58,27 +83,9 @@ Key-based example: [`configs/copilot_mcp.example.json`](../configs/copilot_mcp.e
 
 ## Cursor / local CLIs
 
-Prefer header API key (`configs/cursor-mcp.json.example`). OAuth loopback is also supported by the authorization server when the host initiates Sign-in against `/tenant-mcp`.
+Prefer header API key (`configs/cursor-mcp.json.example`). OAuth loopback is also supported when the host initiates Sign-in against `/tenant-mcp`.
 
 ---
-
-
-
-## Google Gemini (Enterprise — paste OAuth fields)
-
-Gemini Enterprise does **not** use URL-only discovery for custom MCP. Choose **OAuth 2.0** and enter:
-
-| Field | Value |
-|-------|--------|
-| MCP Server URL | `https://ticket.scardustech.com/tenant-mcp` |
-| Authorization URL | `https://ticket.scardustech.com/api/tenant-mcp-oauth/authorize` |
-| Token URL | `https://ticket.scardustech.com/api/tenant-mcp-oauth/token` |
-| Client ID | `gemini-tenant-mcp` |
-| Client Secret | *(leave blank)* |
-| Enable PKCE | **Yes** |
-| Scopes | `mcp:tools offline_access` |
-
-Sign in as **tenant staff**. Ask your Scardus admin to run `ensure_mcp_oauth_gemini_clients` if Client ID is unknown.
 
 ## Revoke
 
