@@ -62,6 +62,24 @@ Prefer header API key (`configs/cursor-mcp.json.example`). OAuth loopback is als
 
 ---
 
+
+
+## Google Gemini (Enterprise — paste OAuth fields)
+
+Gemini Enterprise does **not** use URL-only discovery for custom MCP. Choose **OAuth 2.0** and enter:
+
+| Field | Value |
+|-------|--------|
+| MCP Server URL | `https://ticket.scardustech.com/tenant-mcp` |
+| Authorization URL | `https://ticket.scardustech.com/api/tenant-mcp-oauth/authorize` |
+| Token URL | `https://ticket.scardustech.com/api/tenant-mcp-oauth/token` |
+| Client ID | `gemini-tenant-mcp` |
+| Client Secret | *(leave blank)* |
+| Enable PKCE | **Yes** |
+| Scopes | `mcp:tools offline_access` |
+
+Sign in as **tenant staff**. Ask your Scardus admin to run `ensure_mcp_oauth_gemini_clients` if Client ID is unknown.
+
 ## Revoke
 
 Tenant console → **My Profile → Connections** → **Revoke**. The access key is deactivated immediately (MCP auth cache is short).
