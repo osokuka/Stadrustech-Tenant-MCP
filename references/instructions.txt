@@ -32,12 +32,13 @@ PERMISSIONS (key can_* flags):
   • Projects module must be enabled: can_read_projects / can_create_projects / can_update_projects
   • Invoices: can_read_invoices
 
-SERVICE CATALOG (per client SLA — never mix orgs):
-  • Prefer clients_service_catalog(client_id) after clients_resolve — full catalog
-    for that org’s assigned SLA (categories, EU list + client EUR/h). Same as
-    portal Services & prices. Optional category= / q= to narrow ~200 lines.
-  • clients_services is an alias. services_list(client=…) same; omit client →
-    by_client[] summaries only. clients_pack includes service_catalog summary.
+SERVICE CATALOG / PRICES (per client SLA — never mix orgs):
+  • For UNIT PRICES call clients_service_prices(client_id) or
+    clients_service_catalog(client_id). Response has prices_included=true and
+    services[] with rate (client EUR/h), eu (EU list), id, code, name — plus
+    services_tsv. Default page size 80; if has_more, call with offset=next_offset.
+  • NEVER use clients_pack or services_list() without client for prices — those
+    are summaries only (prices_included=false / empty services[]).
   • Use service id as service_rate_id on tickets / activities. Catalog seeds
     prices; staff may override. Retainer / included hours are NOT replaced.
 

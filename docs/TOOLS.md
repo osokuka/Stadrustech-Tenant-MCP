@@ -11,18 +11,22 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 - Confirm with the user before create / assign / bulk / status writes.
 - `pending` status **requires** a comment (`tickets_set_status`).
 - Assignment uses Django **user PK** (`user_id` from technicians list).
+- **Unit prices:** use **`clients_service_prices`** — never `clients_pack` summaries.
+- After server updates, **reconnect** the MCP connector so new tools appear (hosts cache registries).
 
 ## Typical flows
 
-**Ticket:** `clients_resolve` → `clients_service_catalog(client_id)` → `tickets_create(service_rate_id=…)` → `assignment_recommend` / `tickets_assign` → `tickets_set_status` / `tickets_add_comment`
+**Ticket:** `clients_resolve` → `clients_service_prices(client_id)` → `tickets_create(service_rate_id=…)` → `assignment_recommend` / `tickets_assign` → `tickets_set_status` / `tickets_add_comment`
 
-**Project:** `projects_create` → `clients_service_catalog(client_id)` → `project_activities_create(service_rate_id=…)` → `projects_set_offer_validity` → `projects_offer_pdf`
+**Project / offer:** `clients_resolve` → `clients_service_prices(client_id)` → `projects_create` → `project_activities_create(service_rate_id=…)` → `projects_set_offer_validity` → `projects_offer_pdf`
 
 **Reports:** `reports_list` → `reports_run(report_id, period=…, client_id=…)`
 
-**Client pack:** `clients_resolve` → `clients_pack` (includes `service_catalog` summary)
+**Client pack:** `clients_resolve` → `clients_pack` (workspace snapshot; **catalog summary only** — no unit prices)
 
-**Service catalog (per client SLA):** `clients_resolve` → `clients_service_catalog(client_id)` — full portal catalog for that org’s SLA only. Alias `clients_services`. Or `services_list(client=…)`; omit client → `by_client[]` summaries.
+**Service prices (per client SLA):** `clients_resolve` → **`clients_service_prices(client_id)`**  
+Expect `prices_included=true`, `services[]` with `rate` (client EUR/h), `eu` (EU list), `id`, `code`, `name`, plus `services_tsv`. Default page `limit=80`; if `has_more`, call with `offset=next_offset` (or `limit=250`).  
+Aliases: `clients_service_catalog`, `clients_services`. `services_list(client=…)` same; `services_list()` with no client → summaries only.
 
 ## Tool list
 
@@ -50,16 +54,17 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 | `assignment_recommend` | Score technicians (no assign) |
 | `assignment_auto_assign` | Assign best match |
 
-### Discovery / clients / invoices / services
+### Discovery / clients / invoices / service prices
 
 | Tool | Purpose |
 |------|---------|
 | `search` | Clients/projects/tickets/invoices by name |
 | `clients_list` / `clients_get` / `clients_resolve` | Client lookup |
-| `clients_pack` | Workspace pack (+ `service_catalog` summary) |
-| `clients_service_catalog` | **Preferred** — full SLA service catalog for one client |
+| `clients_pack` | Workspace pack (**catalog SUMMARY only** — not for quotes) |
+| `clients_service_prices` | **Required for unit prices** — compact `rate`/`eu`/`id`/`name` + TSV |
+| `clients_service_catalog` | Priced catalog page (default limit 80; page via offset) |
 | `clients_services` | Alias of `clients_service_catalog` |
-| `services_list` / `services_get` | Per-client catalog (`client=`) or `by_client[]` summaries |
+| `services_list` / `services_get` | `client=` → priced; no client → `by_client[]` summaries |
 | `invoices_list` / `invoices_get` / `invoices_summary` / `invoices_by_month` | Billing ledger |
 | `invoices_pdf` | Invoice PDF (base64) |
 

@@ -27,10 +27,11 @@ by default.
 --- discovery ---
 search(q, types=clients,projects,tickets,invoices) for mixed lookup.
 clients_resolve(q) when the user names an organization.
-clients_pack(client_id, billing_cycle?) workspace snapshot + service_catalog summary.
-clients_service_catalog(client_id, category?, q?) — preferred — full per-SLA catalog.
+clients_pack(client_id) — SUMMARY only (prices_included=false). Not for quotes.
+clients_service_prices(client_id) — REQUIRED for unit prices (rate/eu/id/name + TSV).
+clients_service_catalog(client_id) — same priced lines (default limit=80; page via offset).
 clients_services = alias of clients_service_catalog.
-services_list(client=…) full catalog for one client; omit client → by_client[] summaries.
+services_list(client=…) priced; services_list() with no client = summaries only.
 services_get(id) for one line (+ clients using that SLA).
 
 --- projects ---
