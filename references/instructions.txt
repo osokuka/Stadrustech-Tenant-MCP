@@ -19,23 +19,55 @@ ACTIVE PROJECTS (example):
   • projects_list(status="active") — or omit status and filter client-side.
   • Prefer search(q=…, types=projects) when the user names a project.
 
+TICKET OPS (tenant staff open/manage tickets for any client under this tenant):
+  • “Any opened tickets” / “open tickets” / “what’s still open” (colloquial):
+    → tickets_list(status="opened")  [aliases: unresolved | active | openish]
+    Means ALL tickets that are NOT resolved and NOT closed
+    (= open + in_progress + pending). Do NOT only query status=open.
+    Optional client= after clients_resolve for one org.
+  • Open for a client: clients_resolve → (optional clients_service_prices for service_rate_id)
+    → tickets_create(title, description, client=UUID, priority=…, category=…).
+  • Assign technician: assignment_list_technicians → tickets_assign(ticket_id, technician_id=user_id)
+    OR assignment_recommend → confirm → tickets_assign / assignment_auto_assign.
+    Assign sets status to in_progress. technician_id = Django user PK (technicians[].user_id),
+    never TenantUser UUID.
+  • Change status: tickets_set_status(ticket_id, status, comment=…) — preferred over
+    tickets_update(status=…) so SLA pause/resume runs.
+  • Change priority: tickets_update(ticket_id, priority=low|medium|high|critical)
+    (or tickets_bulk for many tickets). Recalc SLA if needed via tickets_recalculate_sla.
+  • Comment: tickets_add_comment(ticket_id, content, is_internal_note=false|true).
+    Public comments visible to client portal; internal notes staff-only.
+  • Read: tickets_list / tickets_get / tickets_list_comments / search(q=…, types=tickets).
+  • Confirm with the user before create / assign / status / bulk writes.
+
 SLA RULES:
-  • pending pauses SLA — always send a comment with tickets_set_status.
+  • pending pauses SLA — always send a non-empty comment with tickets_set_status.
   • Prefer resolved then closed when finishing work.
   • Assign sets status to in_progress; technician_id is Django user integer PK (user_id from
     assignment_list_technicians) — never TenantUser UUID.
   • sla_response_breached ≠ overall failure; overall failure = sla_breached.
   • tickets_bulk status changes do not run per-ticket SLA pause/resume — prefer tickets_set_status.
 
-PERMISSIONS (key can_* flags):
+PERMISSIONS (key can_* flags — key must have these enabled):
   • Tickets: can_read_tickets / can_create_tickets / can_update_tickets / can_assign_tickets
   • Comments: can_read_comments / can_create_comments
   • Projects module must be enabled: can_read_projects / can_create_projects / can_update_projects
   • Invoices: can_read_invoices
 
+SERVICE OFFERS & EXACT PRICES (tenant staff consulting the agent):
+  • For “what do we charge client X?” or “build / quote a service offer for X”:
+    1) clients_resolve(q=client name) → get client UUID
+    2) clients_service_prices(client_id)  [or alias clients_offer_prices]
+       → services[].rate = exact EUR/h for THAT client; id = service_rate_id
+    3) Present rates from `rate` (not eu alone). Do not invent or guess prices.
+  • Then either: draft the offer in chat from those lines, OR create a one-time
+    project + activities + projects_offer_pdf (see flows below).
+  • NEVER quote from clients_pack, reports, or services_list() without client=
+    (those omit unit prices or return summaries only).
+
 PRICING RULES (same pattern as Client MCP client_services_list):
-  • ALWAYS call clients_service_prices(client_id) (or clients_service_catalog) before
-    tickets_create or project_activities_create for that client.
+  • ALWAYS call clients_service_prices(client_id) (or clients_offer_prices /
+    clients_service_catalog) before tickets_create or project_activities_create.
   • Pass service_rate_id = the catalog line `id` on tickets and project activities.
   • project_activities_create REQUIRES service_rate_id — catalog seeds name, hours, rate.
   • Staff may optionally override hourly_rate / billable_unit_price; do not invent rates.
@@ -45,24 +77,34 @@ PRICING RULES (same pattern as Client MCP client_services_list):
   • SLA retainer / included hours / included tickets are NEVER replaced by catalog prices.
 
 TYPICAL FLOWS:
-  Ticket: clients_resolve → clients_service_prices(client_id) →
-    tickets_create(client=…, service_rate_id=…) → tickets_assign /
-    assignment_recommend → tickets_set_status / tickets_add_comment.
+  Exact prices / consult offer: clients_resolve → clients_service_prices(client_id)
+    [or clients_offer_prices] → answer with services[].rate (page if has_more).
+  Ticket (open + assign + status + priority + comment):
+    clients_resolve → optional clients_service_prices(client_id) →
+    tickets_create(client=…, priority=…, service_rate_id=…) →
+    assignment_list_technicians / assignment_recommend → tickets_assign →
+    tickets_update(priority=…) as needed →
+    tickets_set_status(…) / tickets_add_comment(…).
   Monthly retainer / recurring payment (TENANT STAFF — do NOT create a project):
     clients_resolve → clients_service_prices(client_id) → draft a planning document
     in this AI chat (scope, hours, monthly amount). Tell the user to create the
     recurring charge in the web console: Billing → Recurring (pick client).
     Never call projects_create for retainers / ongoing support contracts.
-  One-time delivery project only: clients_resolve → clients_service_prices(client_id) →
+  One-time delivery project + commercial offer PDF:
+    clients_resolve → clients_service_prices(client_id) →
     projects_create(client=…) → project_activities_create(project=…, service_rate_id=…)
     → optional materials → projects_set_offer_validity → projects_offer_pdf.
   Approve client-submitted project: projects_list(status=submitted) or search →
     confirm → projects_approve(project_id) (or Approve in web Project List).
+  Complete delivery project: projects_complete(project_id) when confirmed
+    (or Mark complete in web) — applies plan hours/rates then proforma.
   Reports: reports_list → reports_run(report_id, period=…, client_id=…).
   Client pack: clients_resolve → clients_pack → clients_service_prices for rates.
 
 ENUMS:
-  Status: open | in_progress | pending | resolved | closed
+  Status (set/filter exact): open | in_progress | pending | resolved | closed
+  Status (list colloquial “opened tickets”): opened | unresolved | active | openish
+    → open + in_progress + pending (not resolved/closed)
   Priority: low | medium | high | critical
   Period: week | month | quarter | year | last_7d | last_30d | last_90d
   Report ids: tickets.summary | tickets.volume | sla.compliance | clients.overview |

@@ -2,6 +2,18 @@ Hosted Tenant MCP — workflow string references (§17.3.2)
 Source of truth for agents + FastMCP tool docstrings. Keep in sync with
 workingscope/AI_FASTMCP_TOOLS.md and Stadrustech-Tenant-MCP docs/TOOLS.md.
 
+--- tickets (tenant staff for any client) ---
+Open: tickets_create · Assign: tickets_assign · Status: tickets_set_status ·
+Priority: tickets_update(priority=…) · Comment: tickets_add_comment ·
+List/detail: tickets_list / tickets_get · Comments: tickets_list_comments.
+
+--- tickets.list “opened” (colloquial) ---
+User says “any opened tickets” / “open tickets” / “what’s in progress or open”:
+→ tickets_list(status="opened") [= unresolved|active|openish]
+→ returns open + in_progress + pending (excludes resolved and closed).
+Exact single status still: status=open|in_progress|pending|resolved|closed.
+Optional client= after clients_resolve.
+
 --- tickets.create ---
 Gather: title (required), description (preferred), client UUID from clients_resolve
 (preferred for SLA), priority (default medium), category (default incident),
@@ -13,6 +25,16 @@ billable_unit_price override). Requires can_create_tickets. Status starts open; 
 status=open|in_progress|pending|resolved|closed.
 pending REQUIRES comment (SLA pause). Prefer resolved then closed when finishing.
 is_internal_note hides comment from client portal. Needs can_update_tickets.
+
+--- tickets.priority ---
+tickets_update(ticket_id, priority=low|medium|high|critical). Needs can_update_tickets.
+May affect SLA targets — tickets_recalculate_sla if due dates look wrong.
+Bulk: tickets_bulk(ticket_ids, priority=…) for many tickets.
+
+--- tickets.comment ---
+tickets_add_comment(ticket_id, content, is_internal_note=false).
+is_internal_note=true → staff-only (hidden from client portal). Needs can_create_comments.
+List with tickets_list_comments (needs can_read_comments).
 
 --- tickets.assign ---
 technician_id = Django user PK (= technicians[].user_id from
@@ -28,11 +50,15 @@ by default.
 search(q, types=clients,projects,tickets,invoices) for mixed lookup.
 clients_resolve(q) when the user names an organization.
 clients_pack(client_id) — SUMMARY only (prices_included=false). Not for quotes.
-clients_service_prices(client_id) — REQUIRED for unit prices (rate/eu/id/name + TSV).
+
+--- service offers / exact prices ---
+PRIMARY: clients_service_prices(client_id) — exact client EUR/h (`rate`) + id/code/name + TSV.
+Alias: clients_offer_prices (same payload) — use when the user asks for offer pricing.
 clients_service_catalog(client_id) — same priced lines (default limit=80; page via offset).
 clients_services = alias of clients_service_catalog.
 services_list(client=…) priced; services_list() with no client = summaries only.
 services_get(id) for one line (+ clients using that SLA).
+Never invent rates; quote `rate` for that TenantClient only.
 
 --- retainers / recurring (tenant staff) ---
 Do NOT use projects_create for monthly retainers or recurring payments.

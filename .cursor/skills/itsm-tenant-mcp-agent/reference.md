@@ -20,16 +20,18 @@ Companion to `SKILL.md`. Read when gathering fields or choosing tools.
 |--------|------|-------|
 | Find by name | `search`, `clients_resolve` | Prefer before UUIDs |
 | Client pack | `clients_pack` | Projects + tickets + invoices + **catalog SUMMARY only** |
-| **Unit prices / catalog lines** | **`clients_service_prices`** | **Required for quotes** — `rate`/`eu`/`id`/`name` + TSV |
+| **Unit prices / catalog lines** | **`clients_service_prices`** / **`clients_offer_prices`** | **Required for quotes/offers** — `rate`/`eu`/`id`/`name` + TSV |
 | Full catalog page | `clients_service_catalog`, `clients_services` | Same priced lines; default `limit=80`, page via `offset` |
 | Catalog index | `services_list()` no client | `by_client[]` summaries — **not** for quotes |
-| Tickets CRUD-ish | `tickets_list/get/create/update` | Prefer set_status / assign for status/assignee |
+| “Opened tickets” (colloquial) | `tickets_list(status="opened")` | = open+in_progress+pending (not resolved/closed); aliases unresolved/active |
+| Tickets CRUD-ish | `tickets_list/get/create/update` | Prefer set_status / assign for status/assignee; priority via update |
 | Status | `tickets_set_status` | `pending` needs comment |
 | Assign | `tickets_assign`, `assignment_*` | Use `user_id` PK |
 | Comments | `tickets_list_comments`, `tickets_add_comment` | |
 | Bulk | `tickets_bulk` | No per-ticket SLA pause on bulk status |
 | Projects (one-time delivery) | `projects_*`, `project_activities_*`, `project_materials_*` | Not for retainers; needs projects module + flags |
 | Approve client submit | `projects_approve` | `submitted` → `planned`; client drops DRAFT banner |
+| Complete delivery | `projects_complete` | Plan hours/rates → completed → proforma |
 | Offers | `projects_offer_pdf/html/xlsx` | Commercial offer export |
 | Retainers / recurring | Draft in chat + **web Billing → Recurring** | Never `projects_create` for monthly retainers |
 | Invoices | `invoices_*` | Needs `can_read_invoices` |
@@ -44,7 +46,7 @@ Full list: [docs/TOOLS.md](../../../docs/TOOLS.md).
 | Step | Tool | Expect |
 |------|------|--------|
 | 1 | `clients_resolve(q=…)` | `client.id` |
-| 2 | **`clients_service_prices(client_id)`** | `prices_included=true`, non-empty `services[]` / `services_tsv` |
+| 2 | **`clients_service_prices(client_id)`** (or `clients_offer_prices`) | `prices_included=true`, non-empty `services[]` / `services_tsv` |
 | 3 | If `has_more` | Call again with `offset=next_offset` (default page 80) or `limit=250` |
 | 4 | Quotes / tickets / activities | Use each line’s `id` as `service_rate_id`; `rate` = client EUR/h, `eu` = EU list |
 
@@ -90,6 +92,7 @@ If the host tool list is stale (~43 tools, no `clients_service_*`), tell the use
 | activity hourly_rate | optional | Staff override only (wins over catalog) |
 | offer_valid_days | for offer | `projects_set_offer_validity` |
 | approve | when `submitted` | `projects_approve` or web **Approve** → `planned` |
+| complete | when delivery done | `projects_complete` or web **Mark complete** |
 
 ## Report ids
 
