@@ -33,6 +33,14 @@ Key-based example: [`configs/claude_desktop_config.example.json`](../configs/cla
 3. Complete the OpenAI OAuth flow.
 4. Sign in as a **tenant staff** user.
 
+**After Scardus updates Tenant MCP tools** (e.g. `clients_service_prices`, required `service_rate_id` on activities): ChatGPT **caches** the connector’s tool schemas. Pasting a skill/instructions file does **not** refresh them.
+
+1. Settings → Apps & Connectors → open the Scardus / Tenant MCP connector.
+2. **Remove / disconnect** it (or toggle off and on if available).
+3. **Add again** with URL `https://ticket.scardustech.com/tenant-mcp` → OAuth sign-in.
+4. Start a **new** chat and confirm tools include `clients_service_prices` and `project_activities_create` requires `service_rate_id`.
+5. Live server currently exposes **~48** tools; if you still see ~43 without catalog tools, the connector was not refreshed.
+
 Key-based example: [`configs/chatgpt_mcp.example.json`](../configs/chatgpt_mcp.example.json).
 
 ---
