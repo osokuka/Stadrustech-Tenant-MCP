@@ -12,13 +12,18 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 - `pending` status **requires** a comment (`tickets_set_status`).
 - Assignment uses Django **user PK** (`user_id` from technicians list).
 - **Unit prices:** use **`clients_service_prices`** — never `clients_pack` summaries.
+- **Retainers / recurring:** do **not** `projects_create` — draft a document in chat, create recurring charge in web **Billing → Recurring**.
 - After server updates, **reconnect** the MCP connector so new tools appear (hosts cache registries).
 
 ## Typical flows
 
 **Ticket:** `clients_resolve` → `clients_service_prices(client_id)` → `tickets_create(service_rate_id=…)` → `assignment_recommend` / `tickets_assign` → `tickets_set_status` / `tickets_add_comment`
 
-**Project / offer (same as Client MCP catalog flow):** `clients_resolve` → `clients_service_prices(client_id)` → `projects_create(client=…)` → **`project_activities_create(project=…, service_rate_id=<catalog id>)`** (required) → optional materials → `projects_set_offer_validity` → `projects_offer_pdf`
+**Monthly retainer / recurring (not a project):** `clients_resolve` → `clients_service_prices(client_id)` → draft plan document in the AI chat → user creates recurring charge in web **Billing → Recurring**
+
+**One-time project / offer:** `clients_resolve` → `clients_service_prices(client_id)` → `projects_create(client=…)` → **`project_activities_create(project=…, service_rate_id=<catalog id>)`** (required) → optional materials → `projects_set_offer_validity` → `projects_offer_pdf`
+
+**Approve client-submitted project:** `projects_approve(project_id)` when `status=submitted` (or web Project List → **Approve**)
 
 **Reports:** `reports_list` → `reports_run(report_id, period=…, client_id=…)`
 
@@ -72,7 +77,8 @@ Aliases: `clients_service_catalog`, `clients_services`. `services_list(client=�
 
 | Tool | Purpose |
 |------|---------|
-| `projects_list` / `projects_get` / `projects_create` / `projects_update` | Projects |
+| `projects_list` / `projects_get` / `projects_create` / `projects_update` | Delivery projects (not retainers) |
+| `projects_approve` | Client-submitted → planned |
 | `projects_detail` / `projects_progress` | Detail / % complete |
 | `projects_set_offer_validity` | Offer validity days |
 | `projects_offer_pdf` / `_html` / `_xlsx` | Commercial offer export |

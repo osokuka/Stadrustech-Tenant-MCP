@@ -48,9 +48,16 @@ TYPICAL FLOWS:
   Ticket: clients_resolve → clients_service_prices(client_id) →
     tickets_create(client=…, service_rate_id=…) → tickets_assign /
     assignment_recommend → tickets_set_status / tickets_add_comment.
-  Project (mirror Client MCP): clients_resolve → clients_service_prices(client_id) →
+  Monthly retainer / recurring payment (TENANT STAFF — do NOT create a project):
+    clients_resolve → clients_service_prices(client_id) → draft a planning document
+    in this AI chat (scope, hours, monthly amount). Tell the user to create the
+    recurring charge in the web console: Billing → Recurring (pick client).
+    Never call projects_create for retainers / ongoing support contracts.
+  One-time delivery project only: clients_resolve → clients_service_prices(client_id) →
     projects_create(client=…) → project_activities_create(project=…, service_rate_id=…)
     → optional materials → projects_set_offer_validity → projects_offer_pdf.
+  Approve client-submitted project: projects_list(status=submitted) or search →
+    confirm → projects_approve(project_id) (or Approve in web Project List).
   Reports: reports_list → reports_run(report_id, period=…, client_id=…).
   Client pack: clients_resolve → clients_pack → clients_service_prices for rates.
 

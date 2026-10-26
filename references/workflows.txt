@@ -34,14 +34,21 @@ clients_services = alias of clients_service_catalog.
 services_list(client=…) priced; services_list() with no client = summaries only.
 services_get(id) for one line (+ clients using that SLA).
 
---- projects ---
-Same pattern as Client MCP project drafts:
+--- retainers / recurring (tenant staff) ---
+Do NOT use projects_create for monthly retainers or recurring payments.
+1) clients_resolve → clients_service_prices(client_id)
+2) Draft a document in the AI chat (scope, included hours, monthly amount)
+3) Tell user to create the recurring charge in web: Billing → Recurring (pick client)
+Clients may still create draft projects via Client MCP — that is fine.
+
+--- projects (one-time / delivery only) ---
 1) clients_resolve → clients_service_prices(client_id) [page if has_more]
-2) projects_create(name, client=…) — do not invent default_hourly_rate
+2) projects_create(name, client=…) — do not invent default_hourly_rate; avoid billing_model=retainer
 3) project_activities_create(project=…, service_rate_id=<catalog id>) REQUIRED
 4) optional materials → projects_set_offer_validity → projects_offer_pdf|html|xlsx
+Approve client-submitted: projects_approve(project_id) when status=submitted → planned.
 Projects module must be enabled or tools return 403.
-billing_model: retainer|time_and_materials|fixed_price.
+billing_model for delivery: time_and_materials|fixed_price.
 
 --- activities / materials ---
 project_activities_create REQUIRED: project UUID + service_rate_id from

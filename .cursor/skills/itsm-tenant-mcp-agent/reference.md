@@ -28,8 +28,10 @@ Companion to `SKILL.md`. Read when gathering fields or choosing tools.
 | Assign | `tickets_assign`, `assignment_*` | Use `user_id` PK |
 | Comments | `tickets_list_comments`, `tickets_add_comment` | |
 | Bulk | `tickets_bulk` | No per-ticket SLA pause on bulk status |
-| Projects | `projects_*`, `project_activities_*`, `project_materials_*` | Needs projects module + flags |
+| Projects (one-time delivery) | `projects_*`, `project_activities_*`, `project_materials_*` | Not for retainers; needs projects module + flags |
+| Approve client submit | `projects_approve` | `submitted` → `planned`; client drops DRAFT banner |
 | Offers | `projects_offer_pdf/html/xlsx` | Commercial offer export |
+| Retainers / recurring | Draft in chat + **web Billing → Recurring** | Never `projects_create` for monthly retainers |
 | Invoices | `invoices_*` | Needs `can_read_invoices` |
 | Reports | `reports_list/schema/run` | Includes `clients.overview` (tenant-only) |
 
@@ -76,17 +78,18 @@ If the host tool list is stale (~43 tools, no `clients_service_*`), tell the use
 | Work done | `resolved` | summary |
 | Finalize | `closed` | optional |
 
-## Project fields
+## Project fields (delivery projects only)
 
 | Field | Required | Notes |
 |-------|----------|-------|
 | name, client | yes on create | |
-| billing_model | optional | retainer / time_and_materials / fixed_price |
+| billing_model | optional | Prefer `time_and_materials` / `fixed_price`. **Do not** use project create for monthly retainers — use web recurring charges |
 | default_hourly_rate | optional | activities inherit if omitted |
 | activity service_rate_id | **required** on create | From `clients_service_prices` — catalog seeds name/hours/rate |
 | activity name, estimated_hours | optional | Defaults from catalog line |
 | activity hourly_rate | optional | Staff override only (wins over catalog) |
 | offer_valid_days | for offer | `projects_set_offer_validity` |
+| approve | when `submitted` | `projects_approve` or web **Approve** → `planned` |
 
 ## Report ids
 
