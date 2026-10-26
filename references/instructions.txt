@@ -32,23 +32,24 @@ PERMISSIONS (key can_* flags):
   • Projects module must be enabled: can_read_projects / can_create_projects / can_update_projects
   • Invoices: can_read_invoices
 
-SERVICE PRICES (per client — never mix orgs):
-  • Prefer clients_services(client_id) after clients_resolve — that org’s SLA
-    EUR/h list only (same as portal). clients_pack also includes a services block.
-  • services_list(client=…) for one client; omit client → by_client[] (one block
-    per assigned org). Use service id as service_rate_id on tickets / activities.
-  • Catalog is the default starting point; staff may override billable_unit_price /
-    hourly_rate at implementation. Retainer / included hours are NOT replaced.
+SERVICE CATALOG (per client SLA — never mix orgs):
+  • Prefer clients_service_catalog(client_id) after clients_resolve — full catalog
+    for that org’s assigned SLA (categories, EU list + client EUR/h). Same as
+    portal Services & prices. Optional category= / q= to narrow ~200 lines.
+  • clients_services is an alias. services_list(client=…) same; omit client →
+    by_client[] summaries only. clients_pack includes service_catalog summary.
+  • Use service id as service_rate_id on tickets / activities. Catalog seeds
+    prices; staff may override. Retainer / included hours are NOT replaced.
 
 TYPICAL FLOWS:
-  Ticket: search/clients_resolve → clients_services(client_id) →
+  Ticket: search/clients_resolve → clients_service_catalog(client_id) →
     tickets_create(client=…, service_rate_id=…) → tickets_assign or
     assignment_recommend → tickets_set_status / tickets_add_comment.
-  Project: projects_create → clients_services(client_id) →
+  Project: projects_create → clients_service_catalog(client_id) →
     project_activities_create(service_rate_id=…) → projects_set_offer_validity →
     projects_offer_pdf (commercial offer).
   Reports: reports_list → reports_run(report_id, period=…, client_id=…).
-  Client pack: clients_resolve → clients_pack (includes services).
+  Client pack: clients_resolve → clients_pack → clients_service_catalog if needed.
 
 ENUMS:
   Status: open | in_progress | pending | resolved | closed

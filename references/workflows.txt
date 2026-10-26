@@ -6,7 +6,7 @@ workingscope/AI_FASTMCP_TOOLS.md and Stadrustech-Tenant-MCP docs/TOOLS.md.
 Gather: title (required), description (preferred), client UUID from clients_resolve
 (preferred for SLA), priority (default medium), category (default incident),
 optional location UUID, optional external_reference, optional service_rate_id
-from clients_services(client_id) (seeds billable_unit_price; optional
+from clients_service_catalog(client_id) (seeds billable_unit_price; optional
 billable_unit_price override). Requires can_create_tickets. Status starts open; source=api.
 
 --- tickets.set_status ---
@@ -27,9 +27,10 @@ by default.
 --- discovery ---
 search(q, types=clients,projects,tickets,invoices) for mixed lookup.
 clients_resolve(q) when the user names an organization.
-clients_pack(client_id, billing_cycle?) for workspace snapshot (includes services).
-clients_services(client_id) — preferred — that org’s SLA prices only.
-services_list(client=…) same as clients_services; omit client → by_client[].
+clients_pack(client_id, billing_cycle?) workspace snapshot + service_catalog summary.
+clients_service_catalog(client_id, category?, q?) — preferred — full per-SLA catalog.
+clients_services = alias of clients_service_catalog.
+services_list(client=…) full catalog for one client; omit client → by_client[] summaries.
 services_get(id) for one line (+ clients using that SLA).
 
 --- projects ---
@@ -40,9 +41,9 @@ Offer flow: projects_set_offer_validity → projects_offer_pdf|html|xlsx (base64
 
 --- activities / materials ---
 project_activities_create: project UUID, name, estimated_hours preferred;
-optional service_rate_id from clients_services (seeds hourly_rate); optional
-hourly_rate override; status planned→…→done. Materials: name, quantity, unit,
-unit_cost (staff can set costs).
+optional service_rate_id from clients_service_catalog (seeds hourly_rate);
+optional hourly_rate override; status planned→…→done. Materials: name, quantity,
+unit, unit_cost (staff can set costs).
 
 --- invoices ---
 Needs can_read_invoices. Filter by client UUID/name, billing_cycle, status,

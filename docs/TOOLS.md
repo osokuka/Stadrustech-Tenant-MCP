@@ -14,15 +14,15 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 
 ## Typical flows
 
-**Ticket:** `clients_resolve` → `clients_services(client_id)` → `tickets_create(service_rate_id=…)` → `assignment_recommend` / `tickets_assign` → `tickets_set_status` / `tickets_add_comment`
+**Ticket:** `clients_resolve` → `clients_service_catalog(client_id)` → `tickets_create(service_rate_id=…)` → `assignment_recommend` / `tickets_assign` → `tickets_set_status` / `tickets_add_comment`
 
-**Project:** `projects_create` → `clients_services(client_id)` → `project_activities_create(service_rate_id=…)` → `projects_set_offer_validity` → `projects_offer_pdf`
+**Project:** `projects_create` → `clients_service_catalog(client_id)` → `project_activities_create(service_rate_id=…)` → `projects_set_offer_validity` → `projects_offer_pdf`
 
 **Reports:** `reports_list` → `reports_run(report_id, period=…, client_id=…)`
 
-**Client pack:** `clients_resolve` → `clients_pack` (includes that client’s `services` prices)
+**Client pack:** `clients_resolve` → `clients_pack` (includes `service_catalog` summary)
 
-**Service prices (per client):** `clients_resolve` → `clients_services(client_id)` — preferred. Or `services_list(client=…)`; omit client → `by_client[]` (one block per org).
+**Service catalog (per client SLA):** `clients_resolve` → `clients_service_catalog(client_id)` — full portal catalog for that org’s SLA only. Alias `clients_services`. Or `services_list(client=…)`; omit client → `by_client[]` summaries.
 
 ## Tool list
 
@@ -56,9 +56,10 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 |------|---------|
 | `search` | Clients/projects/tickets/invoices by name |
 | `clients_list` / `clients_get` / `clients_resolve` | Client lookup |
-| `clients_pack` | Workspace pack (+ that client’s SLA prices) |
-| `clients_services` | **Preferred** — SLA prices for one client only |
-| `services_list` / `services_get` | Per-client prices (`client=`) or `by_client[]` |
+| `clients_pack` | Workspace pack (+ `service_catalog` summary) |
+| `clients_service_catalog` | **Preferred** — full SLA service catalog for one client |
+| `clients_services` | Alias of `clients_service_catalog` |
+| `services_list` / `services_get` | Per-client catalog (`client=`) or `by_client[]` summaries |
 | `invoices_list` / `invoices_get` / `invoices_summary` / `invoices_by_month` | Billing ledger |
 | `invoices_pdf` | Invoice PDF (base64) |
 
