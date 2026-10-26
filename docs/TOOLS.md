@@ -14,15 +14,15 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 
 ## Typical flows
 
-**Ticket:** `clients_resolve` → optional `services_list(client=…)` → `tickets_create(service_rate_id=…)` → `assignment_recommend` / `tickets_assign` → `tickets_set_status` / `tickets_add_comment`
+**Ticket:** `clients_resolve` → `clients_services(client_id)` → `tickets_create(service_rate_id=…)` → `assignment_recommend` / `tickets_assign` → `tickets_set_status` / `tickets_add_comment`
 
-**Project:** `projects_create` → `services_list(client=…)` → `project_activities_create(service_rate_id=…)` → `projects_set_offer_validity` → `projects_offer_pdf`
+**Project:** `projects_create` → `clients_services(client_id)` → `project_activities_create(service_rate_id=…)` → `projects_set_offer_validity` → `projects_offer_pdf`
 
 **Reports:** `reports_list` → `reports_run(report_id, period=…, client_id=…)`
 
-**Client pack:** `clients_resolve` → `clients_pack`
+**Client pack:** `clients_resolve` → `clients_pack` (includes that client’s `services` prices)
 
-**Service prices:** `clients_resolve` → `services_list(client=…)` (same SLA catalog as the client portal)
+**Service prices (per client):** `clients_resolve` → `clients_services(client_id)` — preferred. Or `services_list(client=…)`; omit client → `by_client[]` (one block per org).
 
 ## Tool list
 
@@ -56,8 +56,9 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 |------|---------|
 | `search` | Clients/projects/tickets/invoices by name |
 | `clients_list` / `clients_get` / `clients_resolve` | Client lookup |
-| `clients_pack` | Workspace pack |
-| `services_list` / `services_get` | SLA service price list (EUR/h; filter by client) |
+| `clients_pack` | Workspace pack (+ that client’s SLA prices) |
+| `clients_services` | **Preferred** — SLA prices for one client only |
+| `services_list` / `services_get` | Per-client prices (`client=`) or `by_client[]` |
 | `invoices_list` / `invoices_get` / `invoices_summary` / `invoices_by_month` | Billing ledger |
 | `invoices_pdf` | Invoice PDF (base64) |
 

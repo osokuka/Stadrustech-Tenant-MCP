@@ -18,8 +18,8 @@ Companion to `SKILL.md`. Read when gathering fields or choosing tools.
 | Intent | Tool | Notes |
 |--------|------|-------|
 | Find by name | `search`, `clients_resolve` | Prefer before UUIDs |
-| Client pack | `clients_pack` | Projects + tickets + invoices-by-month |
-| Service prices | `services_list`, `services_get` | SLA catalog EUR/h; prefer `client=` |
+| Client pack | `clients_pack` | Projects + tickets + invoices + services |
+| Service prices | `clients_services`, `services_list`, `services_get` | Per client only; prefer `clients_services` |
 | Tickets CRUD-ish | `tickets_list/get/create/update` | Prefer set_status / assign for status/assignee |
 | Status | `tickets_set_status` | `pending` needs comment |
 | Assign | `tickets_assign`, `assignment_*` | Use `user_id` PK |
@@ -39,7 +39,7 @@ Full list: [docs/TOOLS.md](../../../docs/TOOLS.md).
 | title | yes | Specific |
 | description | strongly preferred | Impact, systems, steps |
 | client | preferred for SLA | UUID from resolve/search |
-| service_rate_id | optional | From `services_list(client=…)`; seeds billable_unit_price |
+| service_rate_id | optional | From `clients_services(client_id)`; seeds billable_unit_price |
 | billable_unit_price | optional | Staff override (wins over catalog) |
 | priority | default medium | low/medium/high/critical |
 | category | default incident | |
@@ -64,7 +64,7 @@ Full list: [docs/TOOLS.md](../../../docs/TOOLS.md).
 | billing_model | optional | retainer / time_and_materials / fixed_price |
 | default_hourly_rate | optional | activities inherit if omitted |
 | activity name, estimated_hours | preferred | status planned→done |
-| activity service_rate_id | optional | From `services_list`; seeds hourly_rate |
+| activity service_rate_id | optional | From `clients_services`; seeds hourly_rate |
 | activity hourly_rate | optional | Staff override (wins over catalog) |
 | offer_valid_days | for offer | `projects_set_offer_validity` |
 
