@@ -5,8 +5,8 @@ workingscope/AI_FASTMCP_TOOLS.md and Stadrustech-Tenant-MCP docs/TOOLS.md.
 --- tickets.create ---
 Gather: title (required), description (preferred), client UUID from clients_resolve
 (preferred for SLA), priority (default medium), category (default incident),
-optional location UUID, optional external_reference, optional service_rate_id
-from clients_service_catalog(client_id) (seeds billable_unit_price; optional
+optional location UUID, optional external_reference, service_rate_id from
+clients_service_prices(client_id) (seeds billable_unit_price; optional
 billable_unit_price override). Requires can_create_tickets. Status starts open; source=api.
 
 --- tickets.set_status ---
@@ -35,16 +35,19 @@ services_list(client=…) priced; services_list() with no client = summaries onl
 services_get(id) for one line (+ clients using that SLA).
 
 --- projects ---
-projects_create needs name + client UUID; billing_model retainer|time_and_materials|
-fixed_price; optional dates YYYY-MM-DD; default_hourly_rate for activities.
+Same pattern as Client MCP project drafts:
+1) clients_resolve → clients_service_prices(client_id) [page if has_more]
+2) projects_create(name, client=…) — do not invent default_hourly_rate
+3) project_activities_create(project=…, service_rate_id=<catalog id>) REQUIRED
+4) optional materials → projects_set_offer_validity → projects_offer_pdf|html|xlsx
 Projects module must be enabled or tools return 403.
-Offer flow: projects_set_offer_validity → projects_offer_pdf|html|xlsx (base64).
+billing_model: retainer|time_and_materials|fixed_price.
 
 --- activities / materials ---
-project_activities_create: project UUID, name, estimated_hours preferred;
-optional service_rate_id from clients_service_catalog (seeds hourly_rate);
-optional hourly_rate override; status planned→…→done. Materials: name, quantity,
-unit, unit_cost (staff can set costs).
+project_activities_create REQUIRED: project UUID + service_rate_id from
+clients_service_prices (catalog seeds name, default_hours, hourly_rate).
+Optional name / estimated_hours / hourly_rate (staff override) / dates YYYY-MM-DD.
+status planned→…→done. Materials: name, quantity, unit, unit_cost (staff can set costs).
 
 --- invoices ---
 Needs can_read_invoices. Filter by client UUID/name, billing_cycle, status,
@@ -56,4 +59,4 @@ optional client_id). clients.overview is tenant-staff only (not on Client MCP).
 
 --- errors ---
 401 missing/invalid key · 403 missing can_* / module off / wrong audience (ck_live_)
-· 404 not in this tenant · 400 validation / no SLA
+· 404 not in this tenant · 400 validation / no SLA / missing service_rate on activity

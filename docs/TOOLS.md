@@ -18,7 +18,7 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 
 **Ticket:** `clients_resolve` → `clients_service_prices(client_id)` → `tickets_create(service_rate_id=…)` → `assignment_recommend` / `tickets_assign` → `tickets_set_status` / `tickets_add_comment`
 
-**Project / offer:** `clients_resolve` → `clients_service_prices(client_id)` → `projects_create` → `project_activities_create(service_rate_id=…)` → `projects_set_offer_validity` → `projects_offer_pdf`
+**Project / offer (same as Client MCP catalog flow):** `clients_resolve` → `clients_service_prices(client_id)` → `projects_create(client=…)` → **`project_activities_create(project=…, service_rate_id=<catalog id>)`** (required) → optional materials → `projects_set_offer_validity` → `projects_offer_pdf`
 
 **Reports:** `reports_list` → `reports_run(report_id, period=…, client_id=…)`
 
@@ -76,7 +76,7 @@ Aliases: `clients_service_catalog`, `clients_services`. `services_list(client=�
 | `projects_detail` / `projects_progress` | Detail / % complete |
 | `projects_set_offer_validity` | Offer validity days |
 | `projects_offer_pdf` / `_html` / `_xlsx` | Commercial offer export |
-| `project_activities_list` / `_create` / `_update` | Activities |
+| `project_activities_list` / `_create` / `_update` | Activities — **create requires `service_rate_id` from catalog** |
 | `project_materials_list` / `_create` / `_update` | Materials/BOM |
 
 ### Reports

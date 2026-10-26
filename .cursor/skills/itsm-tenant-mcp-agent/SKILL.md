@@ -64,13 +64,14 @@ If MCP tools are unavailable, say so and do not pretend the action succeeded.
 4. Optional: `assignment_recommend` → confirm → `tickets_assign` or `assignment_auto_assign`.
 5. Updates: `tickets_set_status` (with comment if pending) / `tickets_add_comment`.
 
-### B — Project (planned delivery)
+### B — Project (planned delivery) — same catalog pattern as Client MCP
 
-1. Resolve `client` UUID by name.
-2. `clients_service_prices(client_id)` for activity rates (page if `has_more`).
-3. Confirm → `projects_create` → `project_activities_create(service_rate_id=…)` (and materials if needed).
-4. `projects_set_offer_validity` → `projects_offer_pdf` / progress as needed.
-5. Mark activities done via `project_activities_update(status=done, …)`.
+1. `clients_resolve` → `client_id`.
+2. **`clients_service_prices(client_id)`** (page if `has_more`) — required before activities.
+3. Confirm → `projects_create(name, client=…)` (do not invent `default_hourly_rate`).
+4. **`project_activities_create(project=…, service_rate_id=<catalog id>)`** — **required** `service_rate_id` (catalog seeds name/hours/rate); optional staff `hourly_rate` override.
+5. Optional materials → `projects_set_offer_validity` → `projects_offer_pdf`.
+6. Mark activities done via `project_activities_update(status=done, …)`.
 
 ### C — Reports / billing pack
 

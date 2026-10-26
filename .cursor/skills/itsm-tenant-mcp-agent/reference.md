@@ -83,9 +83,9 @@ If the host tool list is stale (~43 tools, no `clients_service_*`), tell the use
 | name, client | yes on create | |
 | billing_model | optional | retainer / time_and_materials / fixed_price |
 | default_hourly_rate | optional | activities inherit if omitted |
-| activity name, estimated_hours | preferred | status planned→done |
-| activity service_rate_id | optional | From `clients_service_prices`; seeds hourly_rate |
-| activity hourly_rate | optional | Staff override (wins over catalog) |
+| activity service_rate_id | **required** on create | From `clients_service_prices` — catalog seeds name/hours/rate |
+| activity name, estimated_hours | optional | Defaults from catalog line |
+| activity hourly_rate | optional | Staff override only (wins over catalog) |
 | offer_valid_days | for offer | `projects_set_offer_validity` |
 
 ## Report ids

@@ -5,13 +5,14 @@ AUTH (transport — NEVER ask the human for API keys or secrets in chat):
   • Gemini / Claude / ChatGPT / Copilot attach OAuth Bearer automatically after Sign-in.
   • If tools like clients_list / projects_list / search are visible: CALL THEM NOW.
   • NEVER say “please provide sk_live_…” or ask the user to paste a key.
-  • If no MCP tools are available: say the Gemini workflow agent must Authorize the
-    Tenant MCP connector under Tools & Integrations (and enable Actions on the data store).
+  • If no MCP tools are available: say the host must Authorize / re-add the
+    Tenant MCP connector (tool lists are cached — reconnect after catalog updates).
   • Client keys (ck_live_) and Client MCP (/mcp) are refused. Scope = this Tenant only.
 
 DISCOVERY (prefer names over UUIDs):
   • Prefer search(q=…) or clients_resolve(q=…) by client / ticket / project name before UUID ops.
-  • clients_pack(client_id) for projects + open/resolved tickets + invoices-by-month.
+  • clients_pack(client_id) for projects + open/resolved tickets + invoices-by-month
+    (catalog SUMMARY only — not unit prices).
   • Confirm ambiguous name matches with the user before writes.
 
 ACTIVE PROJECTS (example):
@@ -32,25 +33,26 @@ PERMISSIONS (key can_* flags):
   • Projects module must be enabled: can_read_projects / can_create_projects / can_update_projects
   • Invoices: can_read_invoices
 
-SERVICE CATALOG / PRICES (per client SLA — never mix orgs):
-  • For UNIT PRICES call clients_service_prices(client_id) or
-    clients_service_catalog(client_id). Response has prices_included=true and
-    services[] with rate (client EUR/h), eu (EU list), id, code, name — plus
-    services_tsv. Default page size 80; if has_more, call with offset=next_offset.
-  • NEVER use clients_pack or services_list() without client for prices — those
-    are summaries only (prices_included=false / empty services[]).
-  • Use service id as service_rate_id on tickets / activities. Catalog seeds
-    prices; staff may override. Retainer / included hours are NOT replaced.
+PRICING RULES (same pattern as Client MCP client_services_list):
+  • ALWAYS call clients_service_prices(client_id) (or clients_service_catalog) before
+    tickets_create or project_activities_create for that client.
+  • Pass service_rate_id = the catalog line `id` on tickets and project activities.
+  • project_activities_create REQUIRES service_rate_id — catalog seeds name, hours, rate.
+  • Staff may optionally override hourly_rate / billable_unit_price; do not invent rates.
+  • NEVER use clients_pack or services_list() without client for unit prices
+    (prices_included=false / empty services[]).
+  • Page catalog with offset when has_more (default page 80) or limit=250 once.
+  • SLA retainer / included hours / included tickets are NEVER replaced by catalog prices.
 
 TYPICAL FLOWS:
-  Ticket: search/clients_resolve → clients_service_catalog(client_id) →
-    tickets_create(client=…, service_rate_id=…) → tickets_assign or
+  Ticket: clients_resolve → clients_service_prices(client_id) →
+    tickets_create(client=…, service_rate_id=…) → tickets_assign /
     assignment_recommend → tickets_set_status / tickets_add_comment.
-  Project: projects_create → clients_service_catalog(client_id) →
-    project_activities_create(service_rate_id=…) → projects_set_offer_validity →
-    projects_offer_pdf (commercial offer).
+  Project (mirror Client MCP): clients_resolve → clients_service_prices(client_id) →
+    projects_create(client=…) → project_activities_create(project=…, service_rate_id=…)
+    → optional materials → projects_set_offer_validity → projects_offer_pdf.
   Reports: reports_list → reports_run(report_id, period=…, client_id=…).
-  Client pack: clients_resolve → clients_pack → clients_service_catalog if needed.
+  Client pack: clients_resolve → clients_pack → clients_service_prices for rates.
 
 ENUMS:
   Status: open | in_progress | pending | resolved | closed
@@ -68,3 +70,5 @@ AGENT BEHAVIOR:
   • Persist until required fields are complete; confirm before create / assign / bulk / status writes.
   • Prefer specific titles and impact-rich descriptions on tickets and projects.
   • For reports, prefer period= or from_date/to_date; pass client_id for per-client packs.
+  • If clients_service_prices / service_rate_id are missing from the tool schema, tell the
+    user to reconnect Tenant MCP — do not invent catalogue rates or say pricing is unsupported.
