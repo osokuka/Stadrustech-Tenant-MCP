@@ -20,6 +20,7 @@ Companion to `SKILL.md`. Read when gathering fields or choosing tools.
 |--------|------|-------|
 | Find by name | `search`, `clients_resolve` | Prefer before UUIDs |
 | Client pack | `clients_pack` | Projects + tickets + invoices + **catalog SUMMARY only** |
+| Guided processes | `clients_processes_list`, `clients_process_start/get/update/complete` | Interview; answers in any order; `unanswered_only` loop |
 | **Unit prices / catalog lines** | **`clients_service_prices`** / **`clients_offer_prices`** | **Required for quotes/offers** — `rate`/`eu`/`id`/`name` + TSV |
 | Full catalog page | `clients_service_catalog`, `clients_services` | Same priced lines; default `limit=80`, page via `offset` |
 | Catalog index | `services_list()` no client | `by_client[]` summaries — **not** for quotes |

@@ -108,6 +108,19 @@ If MCP tools are unavailable, say so and do not pretend the action succeeded.
 
 1. `clients_resolve` → `clients_pack(client_id)` (projects + tickets + invoices-by-month + **catalog summary only**).
 
+### E2 — Guided processes (site assessment / onboarding)
+
+Run as a **guided interview** in chat — the human answers; you persist via tools.
+
+1. `clients_resolve(q=…)` → `clients_processes_list(client_id)`.
+2. `clients_process_start(definition_key=site_assessment|client_onboarding)` **or** continue `active_run_id`.
+3. `clients_process_get(run_id, unanswered_only=true)` to load open questions (id, question, type, options).
+4. **Guide the user through every unanswered item.** They may answer in **any order** (skip around, batch several answers, come back later). Re-fetch `unanswered_only=true` after each save if helpful.
+5. After each answer (or batch): `clients_process_update(items=[{id, answer, notes?}])`; optional `date` / `assessor`.
+6. Keep going until `unanswered_count` is 0 (or the user stops). Confirm → `clients_process_complete` (or `clients_process_abandon`).
+7. Never store live passwords or API keys in answers — vault metadata only.
+8. Do not invent answers; ask clearly and wait for the user.
+
 ### F — Service catalog / unit prices (per client SLA)
 
 1. `clients_resolve(q=…)` → `client_id`.

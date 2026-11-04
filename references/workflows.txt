@@ -51,6 +51,18 @@ search(q, types=clients,projects,tickets,invoices) for mixed lookup.
 clients_resolve(q) when the user names an organization.
 clients_pack(client_id) — SUMMARY only (prices_included=false). Not for quotes.
 
+--- guided processes (site assessment / onboarding) ---
+Optional checklists per client — never mandatory / never auto-started.
+Guided interview: agent asks; human answers in ANY order (skip / batch / resume).
+1) clients_resolve → clients_processes_list
+2) clients_process_start(definition_key=site_assessment|client_onboarding)
+   or continue latest active_run_id
+3) clients_process_get(run_id, unanswered_only=true) → present open questions
+4) clients_process_update(items=[{id, answer, notes?}]) — one or many; any order
+5) Repeat 3–4 until unanswered_count=0 (or user pauses)
+6) clients_process_complete (confirm) or clients_process_abandon
+Never invent answers. Never store live passwords or API keys in answer/notes.
+
 --- service offers / exact prices ---
 PRIMARY: clients_service_prices(client_id) — exact client EUR/h (`rate`) + id/code/name + TSV.
 Alias: clients_offer_prices (same payload) — use when the user asks for offer pricing.

@@ -33,6 +33,8 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 
 **Client pack:** `clients_resolve` → `clients_pack` (workspace snapshot; **catalog summary only** — no unit prices)
 
+**Guided processes (site assessment / onboarding via chat):** `clients_resolve` → `clients_processes_list` → `clients_process_start` (or continue `active_run_id`) → `clients_process_get(unanswered_only=true)` → ask every open question (**any answer order** / batch OK) → `clients_process_update(items=[{id,answer,notes}])` → repeat until unanswered_count=0 → `clients_process_complete`. Never invent answers or store live passwords/API keys.
+
 **Exact service prices (per client SLA):** `clients_resolve` → **`clients_service_prices(client_id)`** / **`clients_offer_prices(client_id)`**  
 Expect `prices_included=true`, `services[]` with `rate` (**exact client EUR/h to quote**), `eu` (EU list reference), `id`, `code`, `name`, plus `services_tsv`. Default page `limit=80`; if `has_more`, call with `offset=next_offset` (or `limit=250`).  
 Other aliases: `clients_service_catalog`, `clients_services`. `services_list(client=…)` same; `services_list()` with no client → summaries only.
@@ -72,6 +74,12 @@ Other aliases: `clients_service_catalog`, `clients_services`. `services_list(cli
 | `clients_pack` | Workspace pack (**catalog SUMMARY only** — not for quotes) |
 | `clients_service_prices` | **PRIMARY — exact client prices for offers/quotes** (`rate`/`eu`/`id`/`name` + TSV) |
 | `clients_offer_prices` | Alias of `clients_service_prices` (offer-oriented name) |
+| `clients_processes_list` | Optional process catalog + runs (`site_assessment`, `client_onboarding`) |
+| `clients_process_start` | Start a process run (`definition_key`) |
+| `clients_process_get` | Full payload or `unanswered_only` for fill loops |
+| `clients_process_update` | Patch `{items:[{id,answer,notes}], date, assessor}` |
+| `clients_process_complete` | Mark run completed |
+| `clients_process_abandon` | Abandon in-progress run |
 | `clients_service_catalog` | Full priced catalog page (default limit 80; page via offset) |
 | `clients_services` | Alias of `clients_service_catalog` |
 | `services_list` / `services_get` | `client=` → priced; no client → `by_client[]` summaries |

@@ -100,6 +100,15 @@ TYPICAL FLOWS:
     (or Mark complete in web) — applies plan hours/rates then proforma.
   Reports: reports_list → reports_run(report_id, period=…, client_id=…).
   Client pack: clients_resolve → clients_pack → clients_service_prices for rates.
+  Guided processes (optional site assessment / client onboarding — fill via chat):
+    clients_resolve → clients_processes_list →
+    clients_process_start(definition_key=site_assessment|client_onboarding)
+      OR continue active_run_id →
+    clients_process_get(run_id, unanswered_only=true) → ask every open question
+      (user may answer in ANY order; batch updates OK; re-fetch unanswered as needed) →
+    clients_process_update(items=[{id, answer, notes}]) →
+    clients_process_complete when unanswered_count=0 (confirm).
+    Never invent answers; never store live passwords/API keys.
 
 ENUMS:
   Status (set/filter exact): open | in_progress | pending | resolved | closed
