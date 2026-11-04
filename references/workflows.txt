@@ -63,6 +63,16 @@ Guided interview: agent asks; human answers in ANY order (skip / batch / resume)
 6) clients_process_complete (confirm) or clients_process_abandon
 Never invent answers. Never store live passwords or API keys in answer/notes.
 
+--- credential vault stubs (assessment → empty placeholders) ---
+When a server/device is identified as having credentials (e.g. Domain Admin, iLO):
+1) Do NOT ask the user to paste passwords into chat for MCP storage.
+2) clients_process_vault_stubs_create or clients_vault_stubs_create with labels only
+   (title, kind, host, optional username hint) → secret_status=empty
+3) Put returned vault ids/titles into the process answer as references.
+4) Tell user a vault operator must populate secrets in web: Client → Vault.
+MCP NEVER accepts password/secret/api_key fields (server rejects 400).
+No reveal / populate-secret tools on MCP. Client MCP has no vault tools.
+
 --- service offers / exact prices ---
 PRIMARY: clients_service_prices(client_id) — exact client EUR/h (`rate`) + id/code/name + TSV.
 Alias: clients_offer_prices (same payload) — use when the user asks for offer pricing.
@@ -76,7 +86,7 @@ Never invent rates; quote `rate` for that TenantClient only.
 Do NOT use projects_create for monthly retainers or recurring payments.
 1) clients_resolve → clients_service_prices(client_id)
 2) Draft a document in the AI chat (scope, included hours, monthly amount)
-3) Tell user to create the recurring charge in web: Billing → Recurring (pick client)
+3) Tell user to create the recurring charge in web: Finance & Accounting → Finance → Recurring charges (pick client)
 Clients may still create draft projects via Client MCP — that is fine.
 
 --- projects (one-time / delivery only) ---
@@ -97,6 +107,11 @@ status planned→…→done. Materials: name, quantity, unit, unit_cost (staff c
 --- invoices ---
 Needs can_read_invoices. Filter by client UUID/name, billing_cycle, status,
 billing_kind, settlement, search. invoices_pdf returns base64 PDF.
+Send / resend: invoices_send_email(invoice_id, optional to/cc/note) — confirm first.
+  First send sets email_sent_at; same tool resends.
+Reminders (per invoice, after first send only):
+  invoices_set_reminders(invoice_id, enabled=true|false, interval_days=15)
+  Unlock fails until Email/Send. Interval 1–365 days (default 15).
 
 --- reports ---
 reports_list → reports_schema(report_id) → reports_run(report_id, period|from/to,

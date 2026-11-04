@@ -41,9 +41,10 @@ Never invent or guess a key. Never use `ck_live_` or Client MCP `/mcp`.
 5. **SLA:** `pending` via `tickets_set_status` **requires** a comment. Prefer `resolved` then `closed`. Assign sets `in_progress`.
 6. **Assignment:** `technician_id` / `assigned_to` = Django **user PK** (`technicians[].user_id`), not TenantUser UUID.
 7. **Exact prices / service offers:** For “what do we charge client X?” or drafting an offer, call **`clients_service_prices(client_id)`** (alias **`clients_offer_prices`**). Quote `services[].rate` (that client’s EUR/h). Require `prices_included=true` and non-empty `services[]` / `services_tsv`. **Never** use `clients_pack` or summary-only responses for unit prices.
-8. **Retainers / recurring (critical):** Do **not** call `projects_create` for monthly retainers or recurring payments. Use catalog tools to **draft a document in this AI chat**, then tell staff to create the recurring charge in the **web console** (**Billing → Recurring**, pick the client). One-time delivery projects only via `projects_create`. Clients may still create draft projects via Client MCP.
+8. **Retainers / recurring (critical):** Do **not** call `projects_create` for monthly retainers or recurring payments. Use catalog tools to **draft a document in this AI chat**, then tell staff to create the recurring charge in the **web console** (**Finance & Accounting → Finance → Recurring charges**, pick the client). One-time delivery projects only via `projects_create`. Clients may still create draft projects via Client MCP.
 9. **Stale tools:** If catalog/price tools are missing from the host registry, tell the user to **reconnect / re-add** Tenant MCP — do not invent rates.
 10. **Permissions:** Respect API errors for missing `can_*` or disabled modules (e.g. projects 403); tell the user which flag/module is needed.
+11. **Invoice email / reminders:** `invoices_send_email` then (only after that send) `invoices_set_reminders`. Never enable reminders on an unsent invoice.
 
 If MCP tools are unavailable, say so and do not pretend the action succeeded.
 
@@ -84,7 +85,7 @@ If MCP tools are unavailable, say so and do not pretend the action succeeded.
 
 1. `clients_resolve` → `clients_service_prices(client_id)`.
 2. Draft a planning document **in this chat** (scope, included hours, monthly amount, start date).
-3. **Do not** call `projects_create`. Tell the user to open the web console → **Billing → Recurring** and create the recurring charge for that client.
+3. **Do not** call `projects_create`. Tell the user to open the web console → **Finance & Accounting → Finance → Recurring charges** and create the recurring charge for that client.
 4. Optional: point at SLA retainer fields already on the client’s assigned SLA if relevant.
 
 ### C — One-time / delivery project only
@@ -103,6 +104,8 @@ If MCP tools are unavailable, say so and do not pretend the action succeeded.
 1. Resolve client if needed.
 2. `reports_list` → `reports_run(report_id, period=…, client_id=…)`.
 3. Invoices: `invoices_list` / `invoices_by_month` / `invoices_pdf` when `can_read_invoices`.
+4. Send/resend: confirm → `invoices_send_email(invoice_id)` (optional `to`/`cc` comma-separated).
+5. Reminders (after `email_sent_at` only): confirm → `invoices_set_reminders(invoice_id, enabled=true, interval_days=15)`.
 
 ### E — Client workspace snapshot
 
@@ -119,7 +122,8 @@ Run as a **guided interview** in chat — the human answers; you persist via too
 5. After each answer (or batch): `clients_process_update(items=[{id, answer, notes?}])`; optional `date` / `assessor`.
 6. Keep going until `unanswered_count` is 0 (or the user stops). Confirm → `clients_process_complete` (or `clients_process_abandon`).
 7. Never store live passwords or API keys in answers — vault metadata only.
-8. Do not invent answers; ask clearly and wait for the user.
+8. If a server/device has credentials: `clients_vault_stubs_create` / `clients_process_vault_stubs_create` with **labels only** (empty stubs). **Never** put passwords in MCP. Tell the user a vault operator fills secrets in web Client → Vault.
+9. Do not invent answers; ask clearly and wait for the user.
 
 ### F — Service catalog / unit prices (per client SLA)
 

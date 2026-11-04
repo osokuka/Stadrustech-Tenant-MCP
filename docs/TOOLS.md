@@ -12,14 +12,14 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 - `pending` status **requires** a comment (`tickets_set_status`).
 - Assignment uses Django **user PK** (`user_id` from technicians list).
 - **Exact prices / service offers:** use **`clients_service_prices`** (or alias **`clients_offer_prices`**) for that client’s EUR/h — never `clients_pack` summaries.
-- **Retainers / recurring:** do **not** `projects_create` — draft a document in chat, create recurring charge in web **Billing → Recurring**.
+- **Retainers / recurring:** do **not** `projects_create` — draft a document in chat, create recurring charge in web **Finance & Accounting → Finance → Recurring charges**.
 - After server updates, **reconnect** the MCP connector so new tools appear (hosts cache registries).
 
 ## Typical flows
 
 **Ticket (open / assign / status / priority / comment):** `clients_resolve` → optional `clients_service_prices` → `tickets_create(client=…, priority=…)` → `assignment_list_technicians` / `assignment_recommend` → `tickets_assign` → `tickets_update(priority=…)` as needed → `tickets_set_status` / `tickets_add_comment`
 
-**Monthly retainer / recurring (not a project):** `clients_resolve` → `clients_service_prices(client_id)` → draft plan document in the AI chat → user creates recurring charge in web **Billing → Recurring**
+**Monthly retainer / recurring (not a project):** `clients_resolve` → `clients_service_prices(client_id)` → draft plan document in the AI chat → user creates recurring charge in web **Finance & Accounting → Finance → Recurring charges**
 
 **Consult exact prices / draft a service offer in chat:** `clients_resolve` → **`clients_service_prices(client_id)`** (or `clients_offer_prices`) → quote `services[].rate` for that client only
 
@@ -31,9 +31,13 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 
 **Reports:** `reports_list` → `reports_run(report_id, period=…, client_id=…)`
 
+**Invoice email + reminders:** `invoices_list` / `invoices_get` → confirm → `invoices_send_email(invoice_id)` (resend uses the same tool) → after `email_sent_at`, `invoices_set_reminders(invoice_id, enabled=true, interval_days=15)`. Reminders stay locked until that first send.
+
 **Client pack:** `clients_resolve` → `clients_pack` (workspace snapshot; **catalog summary only** — no unit prices)
 
 **Guided processes (site assessment / onboarding via chat):** `clients_resolve` → `clients_processes_list` → `clients_process_start` (or continue `active_run_id`) → `clients_process_get(unanswered_only=true)` → ask every open question (**any answer order** / batch OK) → `clients_process_update(items=[{id,answer,notes}])` → repeat until unanswered_count=0 → `clients_process_complete`. Never invent answers or store live passwords/API keys.
+
+**Credential vault stubs (planned):** When assessment finds a server with credentials, `clients_vault_stubs_create` / `clients_process_vault_stubs_create` create **empty** placeholders (title/kind/host only). MCP **never** accepts passwords — operators populate secrets in web Client → Vault. Optional `clients_vault_stubs_list` (metadata only).
 
 **Exact service prices (per client SLA):** `clients_resolve` → **`clients_service_prices(client_id)`** / **`clients_offer_prices(client_id)`**  
 Expect `prices_included=true`, `services[]` with `rate` (**exact client EUR/h to quote**), `eu` (EU list reference), `id`, `code`, `name`, plus `services_tsv`. Default page `limit=80`; if `has_more`, call with `offset=next_offset` (or `limit=250`).  
@@ -85,6 +89,8 @@ Other aliases: `clients_service_catalog`, `clients_services`. `services_list(cli
 | `services_list` / `services_get` | `client=` → priced; no client → `by_client[]` summaries |
 | `invoices_list` / `invoices_get` / `invoices_summary` / `invoices_by_month` | Billing ledger |
 | `invoices_pdf` | Invoice PDF (base64) |
+| `invoices_send_email` | **Email / resend** FATURE PDF (`to`/`cc` optional, comma-separated) |
+| `invoices_set_reminders` | Per-invoice reminder opt-in + `interval_days` (only after first send) |
 
 ### Projects
 

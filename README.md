@@ -15,7 +15,7 @@ This repo is what **tenant staff / integrators download**. The MCP server is hos
 
 ## What you get
 
-- **Cursor skill** `itsm-tenant-mcp-agent` — discovers clients by name, opens/assigns/status tickets, plans one-time projects (not retainers — those go to web Billing → Recurring), approves client-submitted projects, runs reports — confirms before writes
+- **Cursor skill** `itsm-tenant-mcp-agent` — discovers clients by name, opens/assigns/status tickets, plans one-time projects (not retainers — those go to web Finance & Accounting → Finance → Recurring charges), approves client-submitted projects, runs reports — confirms before writes
 - **MCP config snippets** for Cursor / Claude Desktop / ChatGPT / Gemini / Copilot
 - **OAuth host guide** (`docs/OAUTH_CLIENTS.md`) — connect without pasting a key
 - **Tool reference** for agents (`docs/TOOLS.md`)

@@ -34,8 +34,10 @@ Companion to `SKILL.md`. Read when gathering fields or choosing tools.
 | Approve client submit | `projects_approve` | `submitted` → `planned`; client drops DRAFT banner |
 | Complete delivery | `projects_complete` | Plan hours/rates → completed → proforma |
 | Offers | `projects_offer_pdf/html/xlsx` | Commercial offer export |
-| Retainers / recurring | Draft in chat + **web Billing → Recurring** | Never `projects_create` for monthly retainers |
+| Retainers / recurring | Draft in chat + **web Finance & Accounting → Finance → Recurring charges** | Never `projects_create` for monthly retainers |
 | Invoices | `invoices_*` | Needs `can_read_invoices` |
+| Invoice email / resend | `invoices_send_email` | Confirm first; unlocks reminders |
+| Invoice reminders | `invoices_set_reminders` | After `email_sent_at` only; `interval_days` 1–365 |
 | Reports | `reports_list/schema/run` | Includes `clients.overview` (tenant-only) |
 
 Full list: [docs/TOOLS.md](../../../docs/TOOLS.md).
