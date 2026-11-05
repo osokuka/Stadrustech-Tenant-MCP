@@ -85,7 +85,7 @@ Examples:
 - “Open a high-priority ticket for Caritas — VPN down at Prishtina site, assign best tech.”
 - “Monthly SLA pack for client X for last month.”
 - “Create a LAN expansion project with switch install + cabling activities and export the offer PDF.”
-- “Help me plan a monthly retainer for client X — draft a document; I’ll add the recurring charge in Billing.”
+- “Help me plan a monthly retainer for client X — draft a document; I’ll add the recurring charge in Finance & Accounting.”
 - “Approve the network segregation project the client submitted.”
 
 ## Security

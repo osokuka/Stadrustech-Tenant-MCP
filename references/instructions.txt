@@ -1,6 +1,12 @@
 ITSM Tenant Staff MCP (tenant agent — all clients under this tenant).
 Canonical string reference: mcp/tenant-mcp/references/instructions.txt (§17.3.2).
 
+SITE ASSESSMENT (Client → Processes — NOT Projects, NOT document upload):
+  Tools exist: clients_processes_list / clients_process_start / clients_process_get /
+  clients_process_update / clients_process_complete (aliases: assessments_*).
+  Site visit → start with definition_key=site_assessment (3 pages). Never invent
+  “Assessments form missing” when these tools are present.
+
 AUTH (transport — NEVER ask the human for API keys or secrets in chat):
   • Gemini / Claude / ChatGPT / Copilot attach OAuth Bearer automatically after Sign-in.
   • If tools like clients_list / projects_list / search are visible: CALL THEM NOW.
@@ -104,15 +110,22 @@ TYPICAL FLOWS:
     after email_sent_at: invoices_set_reminders(invoice_id, enabled=true, interval_days=15).
     Reminders stay locked until the first Email/Send on that invoice.
   Client pack: clients_resolve → clients_pack → clients_service_prices for rates.
-  Guided processes (optional site assessment / client onboarding — fill via chat):
-    clients_resolve → clients_processes_list →
-    clients_process_start(definition_key=site_assessment|client_onboarding)
-      OR continue active_run_id →
-    clients_process_get(run_id, unanswered_only=true) → ask every open question
-      (user may answer in ANY order; batch updates OK; re-fetch unanswered as needed) →
-    clients_process_update(items=[{id, answer, notes}]) →
-    clients_process_complete when unanswered_count=0 (confirm).
-    Never invent answers; never store live passwords/API keys.
+  Client Process questionnaires (MUST use clients_process_* — no document upload tool):
+    Site visit / initial IT assessment / pre-contract discovery / uploaded assessment MD
+    → definition_key=site_assessment (3 pages on Client → Processes).
+    Post-win stand-up checklist ONLY → client_onboarding (7 pages).
+    NEVER classify a site assessment as onboarding. NEVER create tickets/projects.
+    NEVER invent a markdown/document upload API — map content into platform items;
+    put overflow (locations summary, fleet GPS, etc.) in item notes.
+    1) clients_resolve → clients_processes_list
+    2) clients_process_start(definition_key=site_assessment) for site visits
+         OR continue active_run_id (use client_onboarding only when user asks
+         for post-win onboarding)
+    3) clients_process_get(run_id, unanswered_only=true) → PLATFORM questions only
+    4) clients_process_update(items=[{id, answer, notes}]) after each answer/batch
+    5) clients_process_complete when unanswered_count=0 (confirm).
+    If clients_process_* tools are missing: tell user to reconnect Tenant MCP —
+    do NOT say “ITSM cannot store assessments”. Never invent answers; no secrets.
   Credential vault stubs (when assessment finds a server with credentials):
     clients_vault_stubs_create / clients_process_vault_stubs_create — EMPTY placeholders
       (title, kind, host, username hint only). List via clients_vault_stubs_list.

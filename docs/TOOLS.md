@@ -35,7 +35,7 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 
 **Client pack:** `clients_resolve` → `clients_pack` (workspace snapshot; **catalog summary only** — no unit prices)
 
-**Guided processes (site assessment / onboarding via chat):** `clients_resolve` → `clients_processes_list` → `clients_process_start` (or continue `active_run_id`) → `clients_process_get(unanswered_only=true)` → ask every open question (**any answer order** / batch OK) → `clients_process_update(items=[{id,answer,notes}])` → repeat until unanswered_count=0 → `clients_process_complete`. Never invent answers or store live passwords/API keys.
+**Client Process questionnaires (site assessment / onboarding):** This **is** how ITSM stores pre-contract assessments on the client record (Processes tab) — not tickets/projects and not chat-only notes. `clients_resolve` → `clients_processes_list` → `clients_process_start` (`site_assessment` \| `client_onboarding`, or continue `active_run_id`) → `clients_process_get(unanswered_only=true)` → ask **platform** questions → `clients_process_update(items=[{id,answer,notes}])` (extra detail → `notes`) → `clients_process_complete`. If tools missing → reconnect Tenant MCP. Never invent answers or store live secrets.
 
 **Credential vault stubs (planned):** When assessment finds a server with credentials, `clients_vault_stubs_create` / `clients_process_vault_stubs_create` create **empty** placeholders (title/kind/host only). MCP **never** accepts passwords — operators populate secrets in web Client → Vault. Optional `clients_vault_stubs_list` (metadata only).
 
@@ -78,16 +78,16 @@ Other aliases: `clients_service_catalog`, `clients_services`. `services_list(cli
 | `clients_pack` | Workspace pack (**catalog SUMMARY only** — not for quotes) |
 | `clients_service_prices` | **PRIMARY — exact client prices for offers/quotes** (`rate`/`eu`/`id`/`name` + TSV) |
 | `clients_offer_prices` | Alias of `clients_service_prices` (offer-oriented name) |
-| `clients_processes_list` | Optional process catalog + runs (`site_assessment`, `client_onboarding`) |
-| `clients_process_start` | Start a process run (`definition_key`) |
-| `clients_process_get` | Full payload or `unanswered_only` for fill loops |
-| `clients_process_update` | Patch `{items:[{id,answer,notes}], date, assessor}` |
-| `clients_process_complete` | Mark run completed |
+| `clients_processes_list` | Client Process questionnaires on the client (`site_assessment`, `client_onboarding`) |
+| `clients_process_start` | Start questionnaire on client record (`definition_key`) — not a ticket/project |
+| `clients_process_get` | Read questionnaire / `unanswered_only` interview loop |
+| `clients_process_update` | **Save** `{items:[{id,answer,notes}], date, assessor}` — overflow facts in `notes` |
+| `clients_process_complete` | Mark questionnaire completed |
 | `clients_process_abandon` | Abandon in-progress run |
 | `clients_service_catalog` | Full priced catalog page (default limit 80; page via offset) |
 | `clients_services` | Alias of `clients_service_catalog` |
 | `services_list` / `services_get` | `client=` → priced; no client → `by_client[]` summaries |
-| `invoices_list` / `invoices_get` / `invoices_summary` / `invoices_by_month` | Billing ledger |
+| `invoices_list` / `invoices_get` / `invoices_summary` / `invoices_by_month` | Finance & Accounting → Accounting (client AR) |
 | `invoices_pdf` | Invoice PDF (base64) |
 | `invoices_send_email` | **Email / resend** FATURE PDF (`to`/`cc` optional, comma-separated) |
 | `invoices_set_reminders` | Per-invoice reminder opt-in + `interval_days` (only after first send) |

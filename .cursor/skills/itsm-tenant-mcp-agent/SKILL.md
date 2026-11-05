@@ -2,9 +2,10 @@
 name: itsm-tenant-mcp-agent
 description: >-
   Drives Scardus Tech Hosted Tenant MCP (sk_live_) tools for tenant staff:
-  search clients, per-client SLA service prices/catalog, tickets, projects,
-  invoices, and reports. Never uses ck_live_ or Client MCP. Persistently
-  gathers required fields and confirms before writes.
+  search clients, site assessment / client process questionnaires
+  (clients_process_*), per-client SLA service prices/catalog, tickets,
+  projects, invoices, and reports. Never uses ck_live_ or Client MCP.
+  Persistently gathers required fields and confirms before writes.
 ---
 
 # ITSM Tenant MCP Agent (Stadrustech-Tenant-MCP)
@@ -111,19 +112,30 @@ If MCP tools are unavailable, say so and do not pretend the action succeeded.
 
 1. `clients_resolve` → `clients_pack(client_id)` (projects + tickets + invoices-by-month + **catalog summary only**).
 
-### E2 — Guided processes (site assessment / onboarding)
+### E2 — Client Process questionnaires (site assessment / onboarding)
 
-Run as a **guided interview** in chat — the human answers; you persist via tools.
+**These tools ARE the ITSM save path** for pre-contract site assessments and
+onboarding checklists (Client → Processes). Do **not** say the platform cannot
+store questionnaires. Do **not** create tickets or projects for assessments.
+Do **not** keep answers as chat-only “assessment notes”.
+
+Run as a **guided interview** — human answers; you persist via tools.
 
 1. `clients_resolve(q=…)` → `clients_processes_list(client_id)`.
-2. `clients_process_start(definition_key=site_assessment|client_onboarding)` **or** continue `active_run_id`.
-3. `clients_process_get(run_id, unanswered_only=true)` to load open questions (id, question, type, options).
-4. **Guide the user through every unanswered item.** They may answer in **any order** (skip around, batch several answers, come back later). Re-fetch `unanswered_only=true` after each save if helpful.
-5. After each answer (or batch): `clients_process_update(items=[{id, answer, notes?}])`; optional `date` / `assessor`.
-6. Keep going until `unanswered_count` is 0 (or the user stops). Confirm → `clients_process_complete` (or `clients_process_abandon`).
-7. Never store live passwords or API keys in answers — vault metadata only.
-8. If a server/device has credentials: `clients_vault_stubs_create` / `clients_process_vault_stubs_create` with **labels only** (empty stubs). **Never** put passwords in MCP. Tell the user a vault operator fills secrets in web Client → Vault.
-9. Do not invent answers; ask clearly and wait for the user.
+2. Pick the right key — **do not mix them up:**
+   - **Site visit / initial IT assessment / pre-contract / uploaded assessment MD** → `definition_key=site_assessment` (**3 pages**).
+   - **Post-win stand-up only** → `client_onboarding` (7 pages). Never use onboarding for a site assessment.
+3. `clients_process_start(…)` **or** continue `active_run_id`. There is **no** document-upload tool — map the assessment into platform items; overflow → `notes`.
+4. `clients_process_get(run_id, unanswered_only=true)` — ask **platform** questions only (do not invent a parallel form).
+5. Guide through unanswered items (**any order** / batch / resume OK).
+6. After each answer/batch: `clients_process_update(items=[{id, answer, notes?}])`; optional `date` / `assessor`.
+   - `answer` = client’s answer to that item.
+   - `notes` = observations, verification, or **extra facts with no dedicated field** (locations summary, fleet GPS, SIM provider, etc.).
+7. Until `unanswered_count` is 0 (or user pauses). Confirm → `clients_process_complete` (or `clients_process_abandon`).
+8. If `clients_process_*` tools are missing → **reconnect Tenant MCP**; do **not** say ITSM cannot store assessments. If a call 403s → report it; never pretend ITSM was updated.
+9. Never store live passwords/API keys — vault metadata only.
+10. Credentials found → empty stubs via `clients_vault_stubs_create` / `clients_process_vault_stubs_create` (labels only). Operator fills secrets in web Client → Vault.
+11. Do not invent answers; ask clearly and wait.
 
 ### F — Service catalog / unit prices (per client SLA)
 

@@ -39,7 +39,7 @@ Key-based example: [`configs/claude_desktop_config.example.json`](../configs/cla
 2. **Remove / disconnect** it (or toggle off and on if available).
 3. **Add again** with URL `https://ticket.scardustech.com/tenant-mcp` → OAuth sign-in.
 4. Start a **new** chat and confirm tools include `clients_service_prices` and `project_activities_create` requires `service_rate_id`.
-5. Live server currently exposes **~48** tools; if you still see ~43 without catalog tools, the connector was not refreshed.
+5. Live server exposes **~36** tools with **`clients_process_*` first**. After reconnect, confirm tools include `clients_process_start` / `clients_processes_list` (and `clients_service_prices`). If you still see an old **48-tool** catalog without process tools, fully **remove** the connector, add the same URL again (`https://ticket.scardustech.com/tenant-mcp`), Sign in, then start a **new** chat.
 
 Key-based example: [`configs/chatgpt_mcp.example.json`](../configs/chatgpt_mcp.example.json).
 
