@@ -17,7 +17,9 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 
 ## Typical flows
 
-**Ticket (open / assign / status / priority / comment):** `clients_resolve` → optional `clients_service_prices` → `tickets_create(client=…, priority=…)` → `assignment_list_technicians` / `assignment_recommend` → `tickets_assign` → `tickets_update(priority=…)` as needed → `tickets_set_status` / `tickets_add_comment`
+**HARD RULE — invoice lines:** Tenant MCP never adds ticket/project invoice lines. Backend auto-adds on ticket resolve/close and on `projects_complete` (draft proforma). `invoices_*` = read/email/reminders only.
+
+**Ticket (open / assign / resolve with retainer check):** `clients_resolve` → optional `clients_service_prices` → `tickets_create(client=…, priority=…)` → `assignment_list_technicians` / `assignment_recommend` → `tickets_assign` → `tickets_update` / `tickets_add_comment` as needed → `clients_retainer_hours` / `tickets_billing(hours=…)` → confirm → `tickets_resolve(hours=…, service_rate_id=?, billable_note=work name)`
 
 **Monthly retainer / recurring (not a project):** `clients_resolve` → `clients_service_prices(client_id)` → draft plan document in the AI chat → user creates recurring charge in web **Finance & Accounting → Finance → Recurring charges**
 
@@ -55,6 +57,9 @@ Other aliases: `clients_service_catalog`, `clients_services`. `services_list(cli
 | `tickets_update` | **Priority** and other PATCH fields (not preferred for status/assign) |
 | `tickets_assign` | **Assign** by `technician_id` (Django user PK) → in_progress |
 | `tickets_set_status` | **Status** with SLA pause/resume (`pending` needs comment) |
+| `tickets_billing` | Preview SLA/retainer bill decision for a ticket |
+| `tickets_resolve` | Resolve with hours + retainer-aware bill/€0 line |
+| `clients_retainer_hours` | Current-month retainer pool (used/remaining) |
 | `tickets_recalculate_sla` | Recalc due dates after priority/client change |
 | `tickets_bulk` | Bulk status/priority/assignee (no per-ticket SLA pause) |
 | `tickets_list_comments` | List comments |
@@ -111,9 +116,19 @@ Other aliases: `clients_service_catalog`, `clients_services`. `services_list(cli
 |------|---------|
 | `reports_list` | Available report ids |
 | `reports_schema` | Schema for one report |
-| `reports_run` | Run report |
+| `reports_run` | Run report (`period` **or** `from_date`/`to_date`, optional `client_id`) |
+| `reports_tickets_hours` | Alias for `tickets.hours` — weekly hours + billable split |
 
-Allowed `report_id`: `tickets.summary`, `tickets.volume`, `sla.compliance`, `clients.overview`, `projects.hours`, `billing.invoices`.
+Allowed `report_id`: `tickets.summary`, `tickets.volume`, `tickets.hours`, `sla.compliance`, `clients.overview`, `projects.hours`, `billing.invoices`, `risks.heatmap`.
+
+**Weekly hours pack (`tickets.hours` / `reports_tickets_hours`):**
+
+- Prefer `from_date`/`to_date` when the report week is not MCP Monday→today (e.g. Friday Berlin cutover).
+- Else `period=week` is fine.
+- Totals: `hours_logged`, `hours_billable`, `hours_non_billable`.
+- Rows: per-ticket `hours_logged`, `billing_status` (`billable`|`non_billable`|`hours_not_logged`).
+- Clients: `hours_remaining` + `retainer_hours` (current-month pool when on hours SLA).
+- Fallback: `tickets_get` → `hours_logged` / `billing_status` / `billing.retainer_hours`.
 
 ## String references (same text the hosted FastMCP loads)
 

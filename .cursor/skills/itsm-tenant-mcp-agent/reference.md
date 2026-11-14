@@ -38,7 +38,10 @@ Companion to `SKILL.md`. Read when gathering fields or choosing tools.
 | Invoices | `invoices_*` | Needs `can_read_invoices` |
 | Invoice email / resend | `invoices_send_email` | Confirm first; unlocks reminders |
 | Invoice reminders | `invoices_set_reminders` | After `email_sent_at` only; `interval_days` 1–365 |
-| Reports | `reports_list/schema/run` | Includes `clients.overview` (tenant-only) |
+| Reports | `reports_list` / `reports_schema` / `reports_run` | Tenant-only: `clients.overview`, `tickets.hours` |
+| **Weekly hours / billable pack** | **`reports_tickets_hours`** (or `reports_run(tickets.hours)`) | Prefer `from_date`/`to_date` for custom weeks; else `period=week` |
+| Ticket billing card | `tickets_get` → `hours_logged`, `billing_status`, `billing` | Detail includes `billing.retainer_hours` when on hours SLA |
+| Retainer pool only | `clients_retainer_hours(client_id)` | Current-month used/remaining |
 
 Full list: [docs/TOOLS.md](../../../docs/TOOLS.md).
 
@@ -99,9 +102,27 @@ If the host tool list is stale (~43 tools, no `clients_service_*`), tell the use
 
 ## Report ids
 
-`tickets.summary` · `tickets.volume` · `sla.compliance` · `clients.overview` · `projects.hours` · `billing.invoices`
+`tickets.summary` · `tickets.volume` · `tickets.hours` · `sla.compliance` · `clients.overview` · `projects.hours` · `billing.invoices` · `risks.heatmap`
 
-Period: `week` | `month` | `quarter` | `year` | `last_7d` | `last_30d` | `last_90d` — or `from_date`/`to_date`.
+### `tickets.hours` (weekly agent packs)
+
+| Call | When |
+|------|------|
+| `reports_tickets_hours(client_id=…, from_date=…, to_date=…)` | **Preferred** when the pack week is custom (e.g. Friday Berlin cutover) |
+| `reports_tickets_hours(client_id=…, period="week")` | Only if Monday→today is fine |
+| `reports_run(report_id="tickets.hours", …)` | Same payload |
+
+**Payload to use in the Word/table pack**
+
+| Source | Fields |
+|--------|--------|
+| `totals` | `hours_logged`, `hours_billable`, `hours_non_billable`, `tickets_hours_not_logged` |
+| `rows[]` | `hours_logged`, `billing_status` (`billable`\|`non_billable`\|`hours_not_logged`), `billing_label`, `is_billable`, `billable_note` |
+| `clients[]` | `hours_remaining`, `retainer_hours` (current-month pool; not period-scoped) |
+
+**Fallback:** `tickets_get` → top-level `hours_logged` / `billing_status` / `billing.retainer_hours`.
+
+Period presets: `week` | `month` | `quarter` | `year` | `last_7d` | `last_30d` | `last_90d`. Explicit `from_date`/`to_date` (ISO) override presets.
 
 ## Permission flags (key)
 

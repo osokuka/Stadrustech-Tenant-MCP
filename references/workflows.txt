@@ -3,7 +3,8 @@ Source of truth for agents + FastMCP tool docstrings. Keep in sync with
 workingscope/AI_FASTMCP_TOOLS.md and Stadrustech-Tenant-MCP docs/TOOLS.md.
 
 --- tickets (tenant staff for any client) ---
-Open: tickets_create · Assign: tickets_assign · Status: tickets_set_status ·
+Open: tickets_create · Assign: tickets_assign · Resolve: tickets_resolve ·
+Status: tickets_set_status · Billing preview: tickets_billing / clients_retainer_hours ·
 Priority: tickets_update(priority=…) · Comment: tickets_add_comment ·
 List/detail: tickets_list / tickets_get · Comments: tickets_list_comments.
 
@@ -21,10 +22,28 @@ optional location UUID, optional external_reference, service_rate_id from
 clients_service_prices(client_id) (seeds billable_unit_price; optional
 billable_unit_price override). Requires can_create_tickets. Status starts open; source=api.
 
+--- tickets.billing / tickets.resolve (SLA + retainer) ---
+Invoice lines are NEVER created by Tenant MCP. The backend adds/updates the draft
+invoice line automatically when the ticket becomes resolved/closed
+(sync_ticket_to_open_bill). Same for projects: projects_complete → draft proforma.
+MCP only logs hours + billable flags + status.
+
+Before finishing work on a client ticket:
+1) clients_resolve → clients_retainer_hours(client_id) and/or tickets_billing(ticket_id, hours=…)
+2) Confirm hours with the user.
+3) tickets_resolve(ticket_id, hours=…, service_rate_id=?, billable_note=?, also_close=?)
+   - hours retainer + pool remaining → is_billable=true (system €0 covered line on resolve)
+   - pool exhausted → is_billable=true (system overage line on resolve)
+   - mark_non_billable=true → goodwill (hours logged; system does not invoice)
+4) billable_note = short work/service name ONLY (or omit → service_rate / ticket title).
+   NEVER “covered by retainer”, “non-billable”, or billing commentary in billable_note.
+Do NOT call any invoice create/add-line tool for tickets. Read invoices_* only to verify.
+
 --- tickets.set_status ---
 status=open|in_progress|pending|resolved|closed.
-pending REQUIRES comment (SLA pause). Prefer resolved then closed when finishing.
-is_internal_note hides comment from client portal. Needs can_update_tickets.
+pending REQUIRES comment (SLA pause). Prefer tickets_resolve when finishing billable work.
+Optional billing fields on resolve/close: billable_hours, is_billable, billable_note,
+service_rate_id. is_internal_note hides comment from client portal. Needs can_update_tickets.
 
 --- tickets.priority ---
 tickets_update(ticket_id, priority=low|medium|high|critical). Needs can_update_tickets.
@@ -78,6 +97,35 @@ When a server/device is identified as having credentials (e.g. Domain Admin, iLO
 MCP NEVER accepts password/secret/api_key fields (server rejects 400).
 No reveal / populate-secret tools on MCP. Client MCP has no vault tools.
 
+--- risk assessment & register (module grc) ---
+Needs grc enabled + can_read_risks / can_write_risks.
+Cadence: formal min once/year + event-driven on infra change or mitigation done.
+Kinds: ad_hoc | site_assessment | client_onboarding | periodic_annual |
+  periodic_custom | nis2 | cmmc | iso27001
+1) Site / onboarding → clients_process_* then
+   risk_assessments_start(client_org=…, process_run=run_id)
+   (kind inferred from process if ad_hoc)
+2) Formal annual / NIS2 / CMMC / ISO → kind=periodic_annual|nis2|cmmc|iso27001
+   List overdue: risk_assessments_list(overdue=true)
+3) Infra change or mitigation complete → kind=ad_hoc (name the trigger in title);
+   re-score affected risks; does not extend next_due_at
+4) Interview → propose risks → confirm → risks_create
+   (assessment=, roadmap=[…], delivery_vehicle=ticket|project|none — be decisive)
+5) risks_set_treatment / risks_roadmap_set as needed
+6) If mitigate: risks_create_ticket OR risks_create_project (confirm; links for UI)
+7) risk_assessments_complete → next_due_at only for recurring/framework kinds
+8) Exec view: risks_summary / reports_run(risks.heatmap); CSV via risks_export
+Never paste secrets into evidence. Full NIS2/CMMC control libraries = later GRC.
+
+--- GRC MVP (frameworks / SSP) ---
+Needs can_read_grc / can_write_grc + module grc.
+1) grc_frameworks_list → pick pack UUID
+2) Confirm → grc_assignment_create(framework, client?) seeds implementations
+3) grc_implementations_list / grc_gaps → update via grc_implementation_update(status=…)
+4) grc_dashboard for % / overdue audits / high-risk coverage
+5) grc_ssp_get / grc_ssp_update for System Security Plan sections
+Confirm before writes; no secrets in evidence notes.
+
 --- service offers / exact prices ---
 PRIMARY: clients_service_prices(client_id) — exact client EUR/h (`rate`) + id/code/name + TSV.
 Alias: clients_offer_prices (same payload) — use when the user asks for offer pricing.
@@ -120,7 +168,18 @@ Reminders (per invoice, after first send only):
 
 --- reports ---
 reports_list → reports_schema(report_id) → reports_run(report_id, period|from/to,
-optional client_id). clients.overview is tenant-staff only (not on Client MCP).
+optional client_id). clients.overview / tickets.hours are tenant-staff only.
+
+Weekly hours + billable split (agent report):
+  Prefer from_date/to_date when the pack week is custom (e.g. Friday Berlin cutover):
+    reports_tickets_hours(client_id=…, from_date=YYYY-MM-DD, to_date=YYYY-MM-DD)
+  Or period=week only if Monday→today is acceptable:
+    reports_tickets_hours(period=week, client_id=…)
+    reports_run(report_id=tickets.hours, period=week, client_id=…)
+  → totals.hours_logged / hours_billable / hours_non_billable
+  → rows[].billing_status (billable|non_billable|hours_not_logged)
+  → clients[].hours_remaining + retainer_hours (current month pool)
+Single ticket fallback: tickets_get → hours_logged, billing_status, billing.retainer_hours.
 
 --- errors ---
 401 missing/invalid key · 403 missing can_* / module off / wrong audience (ck_live_)

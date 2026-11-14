@@ -37,18 +37,34 @@ TICKET OPS (tenant staff open/manage tickets for any client under this tenant):
     OR assignment_recommend → confirm → tickets_assign / assignment_auto_assign.
     Assign sets status to in_progress. technician_id = Django user PK (technicians[].user_id),
     never TenantUser UUID.
-  • Change status: tickets_set_status(ticket_id, status, comment=…) — preferred over
-    tickets_update(status=…) so SLA pause/resume runs.
+  • Finish work (REQUIRED billing workflow):
+    clients_retainer_hours(client_id) and/or tickets_billing(ticket_id, hours=…)
+    → confirm hours → tickets_resolve(ticket_id, hours=…, service_rate_id=?, billable_note=?).
+    Prefer tickets_resolve over tickets_set_status(resolved/closed).
+    Invoice lines are AUTO-added by the server on resolve/close — MCP must NOT
+    create or edit invoice lines for tickets (no invoice add-line tools).
+  • Project delivery done: projects_complete → server creates/updates draft proforma.
+    Do not invent project invoice lines via MCP; staff may still issue via web if needed.
+  • Change status (non-finish): tickets_set_status(ticket_id, status, comment=…) —
+    preferred over tickets_update(status=…) so SLA pause/resume runs.
   • Change priority: tickets_update(ticket_id, priority=low|medium|high|critical)
     (or tickets_bulk for many tickets). Recalc SLA if needed via tickets_recalculate_sla.
   • Comment: tickets_add_comment(ticket_id, content, is_internal_note=false|true).
     Public comments visible to client portal; internal notes staff-only.
   • Read: tickets_list / tickets_get / tickets_list_comments / search(q=…, types=tickets).
-  • Confirm with the user before create / assign / status / bulk writes.
+  • Confirm with the user before create / assign / resolve / status / bulk writes.
 
-SLA RULES:
+SLA + RETAINER BILLING RULES:
   • pending pauses SLA — always send a non-empty comment with tickets_set_status.
-  • Prefer resolved then closed when finishing work.
+  • Prefer resolved then closed when finishing work (tickets_resolve; also_close optional).
+  • Hours retainer: ALWAYS log hours before resolve/close.
+    - Pool remaining → is_billable=true (server puts €0 covered line on resolve).
+    - Pool exhausted → is_billable=true (server puts overage line on resolve).
+    - Goodwill only → mark_non_billable=true (hours logged; server skips invoice line).
+  • billable_note / invoice label = ticket title or catalog service name — NEVER
+    “covered by retainer”, “non-billable”, or other billing commentary.
+  • HARD RULE: Tenant MCP never adds invoice lines. Trigger = ticket resolve/close
+    or project complete (backend). invoices_* = read / email / reminders only.
   • Assign sets status to in_progress; technician_id is Django user integer PK (user_id from
     assignment_list_technicians) — never TenantUser UUID.
   • sla_response_breached ≠ overall failure; overall failure = sla_breached.
@@ -59,6 +75,26 @@ PERMISSIONS (key can_* flags — key must have these enabled):
   • Comments: can_read_comments / can_create_comments
   • Projects module must be enabled: can_read_projects / can_create_projects / can_update_projects
   • Invoices: can_read_invoices (also covers invoices_send_email / invoices_set_reminders)
+  • Risks (module grc): can_read_risks / can_write_risks
+
+RISK ASSESSMENT & REGISTER (module grc — confirm before writes):
+  • Cadence policy:
+      Formal minimum = once per year (periodic_annual | nis2 | cmmc | iso27001;
+        cadence_months=12; complete sets next_due_at).
+      ALSO reassess whenever infrastructure changes OR a risk mitigation / roadmap
+        item completes — do not wait for the annual date (kind=ad_hoc; name the trigger).
+      Event-driven ad_hoc does NOT move the formal annual next_due_at.
+  • Triggers (set kind on risk_assessments_start):
+      site_assessment | client_onboarding — link process_run from clients_process_*
+      periodic_annual | periodic_custom — formal recurring reviews (custom needs cadence_months)
+      nis2 | cmmc | iso27001 — regime-aligned formal cycles (framework_code set automatically)
+      ad_hoc — infra change, mitigation done, or other one-off (not a substitute for annual)
+  • After site/onboarding questionnaire work: start/continue a linked RiskAssessment
+      (process_run=…) then extract concrete risks → risks_create + roadmap (not chat-only).
+  • Formal due: risk_assessments_list(overdue=true) or next_due_before=…
+      → interview → risks_* → risk_assessments_complete (schedules next_due_at).
+  • Never store passwords in evidence_summary; vault stubs for credentials only.
+  • If risks_* tools missing: reconnect Tenant MCP. If 403: enable grc + risk key flags.
 
 SERVICE OFFERS & EXACT PRICES (tenant staff consulting the agent):
   • For “what do we charge client X?” or “build / quote a service offer for X”:
@@ -85,12 +121,13 @@ PRICING RULES (same pattern as Client MCP client_services_list):
 TYPICAL FLOWS:
   Exact prices / consult offer: clients_resolve → clients_service_prices(client_id)
     [or clients_offer_prices] → answer with services[].rate (page if has_more).
-  Ticket (open + assign + status + priority + comment):
+  Ticket (open + assign + resolve with retainer check):
     clients_resolve → optional clients_service_prices(client_id) →
     tickets_create(client=…, priority=…, service_rate_id=…) →
     assignment_list_technicians / assignment_recommend → tickets_assign →
-    tickets_update(priority=…) as needed →
-    tickets_set_status(…) / tickets_add_comment(…).
+    tickets_update(priority=…) / tickets_add_comment(…) as needed →
+    clients_retainer_hours / tickets_billing(hours=…) → confirm →
+    tickets_resolve(hours=…, service_rate_id=?, billable_note=work name, also_close=?).
   Monthly retainer / recurring payment (TENANT STAFF — do NOT create a project):
     clients_resolve → clients_service_prices(client_id) → draft a planning document
     in this AI chat (scope, hours, monthly amount). Tell the user to create the
@@ -126,11 +163,27 @@ TYPICAL FLOWS:
     5) clients_process_complete when unanswered_count=0 (confirm).
     If clients_process_* tools are missing: tell user to reconnect Tenant MCP —
     do NOT say “ITSM cannot store assessments”. Never invent answers; no secrets.
+  Client devices / inventory (module assets — during site/onboarding):
+    devices_template(client_id) FIRST → show required/recommended + locations →
+    confirm → devices_create (one) OR devices_bulk_create(devices=[…]) (max 100).
+    List/update: devices_list / devices_get / devices_update.
+    Never invent devices; never put passwords in metadata (vault stubs for secrets).
+    If devices_* tools missing: reconnect Tenant MCP. Needs assets module enabled.
   Credential vault stubs (when assessment finds a server with credentials):
     clients_vault_stubs_create / clients_process_vault_stubs_create — EMPTY placeholders
       (title, kind, host, username hint only). List via clients_vault_stubs_list.
     NEVER send or accept passwords/secrets via MCP — operators populate secrets in web
       Client → Vault. Tell user a vault operator must fill them later.
+  Risk assessment (grc — onboarding / annual / NIS2 / CMMC / event-driven):
+    Full playbook: itsm-tenant-mcp-agent skill reference.md (in monorepo .cursor/skills).
+    clients_resolve → (optional clients_processes_* for site/onboarding) →
+    risk_assessments_start(kind=…, process_run=…, client_org=…) →
+    interview (2–4 Q/turn) → confirm → risks_create(+roadmap, delivery_vehicle=ticket|project|none)
+    → risks_set_treatment → risks_create_ticket OR risks_create_project (decisive; confirm first)
+    → risk_assessments_complete (sets next_due_at for periodic/nis2/cmmc/iso).
+    Ticket = one discrete fix; project = multi-milestone / multi-role / weeks+.
+    Infra change / mitigation done → kind=ad_hoc (does not move next_due_at).
+    List due work: risk_assessments_list(overdue=true) or kind=nis2|cmmc|periodic_annual.
 
 ENUMS:
   Status (set/filter exact): open | in_progress | pending | resolved | closed
@@ -138,8 +191,15 @@ ENUMS:
     → open + in_progress + pending (not resolved/closed)
   Priority: low | medium | high | critical
   Period: week | month | quarter | year | last_7d | last_30d | last_90d
-  Report ids: tickets.summary | tickets.volume | sla.compliance | clients.overview |
-    projects.hours | billing.invoices
+  Report ids: tickets.summary | tickets.volume | tickets.hours | sla.compliance |
+    clients.overview | projects.hours | billing.invoices | risks.heatmap
+  Weekly hours/billable pack: reports_tickets_hours(client_id, from_date, to_date)
+    preferred for custom weeks (e.g. Friday Berlin); or period=week /
+    reports_run(tickets.hours). Ticket detail fallback: tickets_get →
+    hours_logged, billing_status, billing.retainer_hours.hours_remaining.
+  Risk exec view: risks_summary / risks_export (or reports_run risks.heatmap).
+  Controls/SSP themes: compliance_controls_list → risks_attach_control
+    (pass residual_* when status=implemented|verified). Full libraries = later GRC.
   Project status: planned | active | on_hold | completed | archived
   Billing model: retainer | time_and_materials | fixed_price
   Activity status: planned | in_progress | blocked | done | cancelled

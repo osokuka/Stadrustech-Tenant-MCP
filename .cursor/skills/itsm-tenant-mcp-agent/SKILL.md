@@ -4,8 +4,9 @@ description: >-
   Drives Scardus Tech Hosted Tenant MCP (sk_live_) tools for tenant staff:
   search clients, site assessment / client process questionnaires
   (clients_process_*), per-client SLA service prices/catalog, tickets,
-  projects, invoices, and reports. Never uses ck_live_ or Client MCP.
-  Persistently gathers required fields and confirms before writes.
+  projects, invoices, weekly hours/billable reports (tickets.hours),
+  and GRC risk tools. Never uses ck_live_ or Client MCP. Persistently
+  gathers required fields and confirms before writes.
 ---
 
 # ITSM Tenant MCP Agent (Stadrustech-Tenant-MCP)
@@ -39,7 +40,8 @@ Never invent or guess a key. Never use `ck_live_` or Client MCP `/mcp`.
 2. **Discover by name:** Call **`search`** or **`clients_resolve`** before inventing UUIDs.
 3. **No guessing IDs:** Never fabricate ticket / client / project / invoice UUIDs.
 4. **Confirm before write:** Summarize the planned tool call and get explicit OK before create / assign / bulk / status / delete-like updates.
-5. **SLA:** `pending` via `tickets_set_status` **requires** a comment. Prefer `resolved` then `closed`. Assign sets `in_progress`.
+5. **SLA + retainer billing:** `pending` via `tickets_set_status` **requires** a comment. Finish work with `clients_retainer_hours` / `tickets_billing` → confirm hours → **`tickets_resolve`** (stamps hours/billable; **server** auto-adds draft invoice line — MCP never creates invoice lines). `projects_complete` → server draft proforma. `billable_note` = work/service name only. Prefer `resolved` then `closed`. Assign sets `in_progress`.
+5b. **Weekly hours report:** see flow **D2**. Prefer `reports_tickets_hours` / `tickets.hours` with explicit `from_date`/`to_date` when the pack uses a custom week (e.g. Friday Berlin cutover). Fall back to `tickets_get` → `hours_logged` / `billing_status` / `billing.retainer_hours`.
 6. **Assignment:** `technician_id` / `assigned_to` = Django **user PK** (`technicians[].user_id`), not TenantUser UUID.
 7. **Exact prices / service offers:** For “what do we charge client X?” or drafting an offer, call **`clients_service_prices(client_id)`** (alias **`clients_offer_prices`**). Quote `services[].rate` (that client’s EUR/h). Require `prices_included=true` and non-empty `services[]` / `services_tsv`. **Never** use `clients_pack` or summary-only responses for unit prices.
 8. **Retainers / recurring (critical):** Do **not** call `projects_create` for monthly retainers or recurring payments. Use catalog tools to **draft a document in this AI chat**, then tell staff to create the recurring charge in the **web console** (**Finance & Accounting → Finance → Recurring charges**, pick the client). One-time delivery projects only via `projects_create`. Clients may still create draft projects via Client MCP.
@@ -72,15 +74,14 @@ If MCP tools are unavailable, say so and do not pretend the action succeeded.
 2. Optional: `clients_resolve` then `tickets_list(status="opened", client=…)`.
 3. Do **not** only pass `status="open"` (that misses `in_progress` and `pending`).
 
-### A — Ticket (open / assign / status / priority / comment)
+### A — Ticket (open / assign / resolve with retainer check)
 
 1. `search` or `clients_resolve(q=…)` → pick client UUID.
 2. Gather: title, description, priority, category, optional location / `service_rate_id`.
 3. Confirm → `tickets_create(…, client=…, priority=…)`.
 4. Assign: `assignment_list_technicians` or `assignment_recommend` → confirm → `tickets_assign(technician_id=user_id)` or `assignment_auto_assign`.
-5. Priority change: `tickets_update(ticket_id, priority=low|medium|high|critical)`.
-6. Status: `tickets_set_status` (non-empty `comment` required if `pending`; prefer resolved→closed).
-7. Comment: `tickets_add_comment` (`is_internal_note=true` for staff-only).
+5. Priority / comment: `tickets_update` / `tickets_add_comment` as needed (`pending` needs comment via `tickets_set_status`).
+6. Finish: `clients_retainer_hours` / `tickets_billing(hours=…)` → confirm hours → **`tickets_resolve(hours=…, service_rate_id=?, billable_note=work name, also_close=?)`**.
 
 ### B — Monthly retainer / recurring payment (NOT a project)
 
@@ -102,11 +103,28 @@ If MCP tools are unavailable, say so and do not pretend the action succeeded.
 
 ### D — Reports / billing pack
 
-1. Resolve client if needed.
-2. `reports_list` → `reports_run(report_id, period=…, client_id=…)`.
+1. Resolve client if needed (`clients_resolve` → real `client_id`).
+2. `reports_list` → `reports_run(report_id, period=…, client_id=…)` (or `from_date`/`to_date`).
 3. Invoices: `invoices_list` / `invoices_by_month` / `invoices_pdf` when `can_read_invoices`.
 4. Send/resend: confirm → `invoices_send_email(invoice_id)` (optional `to`/`cc` comma-separated).
 5. Reminders (after `email_sent_at` only): confirm → `invoices_set_reminders(invoice_id, enabled=true, interval_days=15)`.
+
+### D2 — Weekly hours / billable client pack (Word / agent report)
+
+Use this for per-client weekly status packs (hours logged, billable vs not, retainer left).
+
+1. `clients_resolve(q=client name)` → **`client_id`** (never invent).
+2. Prefer **`reports_tickets_hours(client_id=…, from_date=YYYY-MM-DD, to_date=YYYY-MM-DD)`**  
+   (or `reports_run(report_id="tickets.hours", client_id=…, from_date=…, to_date=…)`).  
+   - Use **explicit `from_date`/`to_date`** when the report week is not MCP calendar Monday→today (e.g. **Friday 22:00 Berlin** cutover — map that window to calendar dates).  
+   - `period="week"` is OK only when Monday→today is acceptable.
+3. Read:
+   - **totals:** `hours_logged`, `hours_billable`, `hours_non_billable`, `tickets_hours_not_logged`
+   - **rows[]:** per ticket `hours_logged`, `is_billable`, `billing_status` (`billable`|`non_billable`|`hours_not_logged`), `billing_label`, `billable_note`
+   - **clients[]:** `hours_remaining` + `retainer_hours` (current-month pool when on hours SLA)
+4. Layout: table columns **Hours** + **Billing status**; total hours from report totals; show **hours remaining** when `retainer_hours` / `hours_remaining` is present.
+5. **Fallback** if `tickets.hours` fails: `tickets_list` / `tickets_get` for the same window — use top-level `hours_logged`, `billing_status`, and `billing.retainer_hours.hours_remaining`.
+6. Do **not** invent hours or billable flags. Reconnect Tenant MCP if `reports_tickets_hours` / `tickets.hours` is missing from the host tool list.
 
 ### E — Client workspace snapshot
 
