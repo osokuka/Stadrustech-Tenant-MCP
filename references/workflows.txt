@@ -144,9 +144,12 @@ Clients may still create draft projects via Client MCP — that is fine.
 
 --- projects (one-time / delivery only) ---
 1) clients_resolve → clients_service_prices(client_id) [page if has_more]
-2) projects_create(name, client=…) — do not invent default_hourly_rate; avoid billing_model=retainer
-3) project_activities_create(project=…, service_rate_id=<catalog id>) REQUIRED
-4) optional materials → projects_set_offer_validity → projects_offer_pdf|html|xlsx
+2) projects_create(name, client=…, activities=[{service_rate_id, name?, estimated_hours?}…])
+   REQUIRED ≥1 activity in create. description = short objective only (1–3 sentences).
+   NEVER put work breakdown / numbered checklists / "is complete when" in description —
+   those are activity rows. Do not invent default_hourly_rate; avoid billing_model=retainer.
+3) optional project_activities_create for extras; materials → projects_set_offer_validity →
+   projects_offer_pdf|html|xlsx
 Approve client-submitted: projects_approve(project_id) when status=submitted → planned.
 Projects module must be enabled or tools return 403.
 billing_model for delivery: time_and_materials|fixed_price.

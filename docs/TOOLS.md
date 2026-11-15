@@ -25,7 +25,7 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 
 **Consult exact prices / draft a service offer in chat:** `clients_resolve` → **`clients_service_prices(client_id)`** (or `clients_offer_prices`) → quote `services[].rate` for that client only
 
-**One-time project + commercial offer PDF:** `clients_resolve` → `clients_service_prices(client_id)` → `projects_create(client=…)` → **`project_activities_create(project=…, service_rate_id=<catalog id>)`** (required) → optional materials → `projects_set_offer_validity` → `projects_offer_pdf`
+**One-time project + commercial offer PDF:** `clients_resolve` → `clients_service_prices(client_id)` → **`projects_create(client=…, activities=[{service_rate_id,…}])`** (≥1 activity required in create; `description` = short objective only — no checklist dumps) → optional extras / materials → `projects_set_offer_validity` → `projects_offer_pdf`
 
 **Approve client-submitted project:** `projects_approve(project_id)` when `status=submitted` (or web Project List → **Approve**)
 
@@ -101,7 +101,7 @@ Other aliases: `clients_service_catalog`, `clients_services`. `services_list(cli
 
 | Tool | Purpose |
 |------|---------|
-| `projects_list` / `projects_get` / `projects_create` / `projects_update` | Delivery projects (not retainers) |
+| `projects_list` / `projects_get` / `projects_create` / `projects_update` | Delivery projects (not retainers); **create requires `activities[]`** |
 | `projects_approve` | Client-submitted → planned |
 | `projects_complete` | Mark complete; apply plan hours/rates → proforma |
 | `projects_detail` / `projects_progress` | Detail / % complete |

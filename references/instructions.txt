@@ -21,8 +21,15 @@ DISCOVERY (prefer names over UUIDs):
     (catalog SUMMARY only — not unit prices).
   • Confirm ambiguous name matches with the user before writes.
 
-ACTIVE PROJECTS (example):
-  • projects_list(status="active") — or omit status and filter client-side.
+ACTIVE PROJECTS / DAILY STATUS:
+  • projects_list(status="opened")  [aliases: openish | active_work | unresolved | open]
+    = delivery still in play (draft|submitted|planned|active|on_hold) OR completed
+    with unpaid project invoice. EXCLUDES archived and completed+paid.
+    Do NOT use status="active" alone for daily packs (misses planned/on_hold; and
+    status="active" is an exact DB value — not the colloquial “open work” set).
+  • reports_run("projects.hours", period="month", status="opened") for the same filter.
+  • clients_pack → projects.items is already active-work only; settled/paid live in
+    projects.settled_items / all_items. Each row has is_active_work + invoice_paid.
   • Prefer search(q=…, types=projects) when the user names a project.
 
 TICKET OPS (tenant staff open/manage tickets for any client under this tenant):
@@ -135,8 +142,11 @@ TYPICAL FLOWS:
     Never call projects_create for retainers / ongoing support contracts.
   One-time delivery project + commercial offer PDF:
     clients_resolve → clients_service_prices(client_id) →
-    projects_create(client=…) → project_activities_create(project=…, service_rate_id=…)
+    projects_create(client=…, activities=[{service_rate_id, name?, estimated_hours?}…])
+    — REQUIRED ≥1 activity in the same create call. description = short objective only;
+      NEVER dump checklists / numbered controls / "is complete when" into description.
     → optional materials → projects_set_offer_validity → projects_offer_pdf.
+    Add more later with project_activities_create if needed.
   Approve client-submitted project: projects_list(status=submitted) or search →
     confirm → projects_approve(project_id) (or Approve in web Project List).
   Complete delivery project: projects_complete(project_id) when confirmed
@@ -200,7 +210,8 @@ ENUMS:
   Risk exec view: risks_summary / risks_export (or reports_run risks.heatmap).
   Controls/SSP themes: compliance_controls_list → risks_attach_control
     (pass residual_* when status=implemented|verified). Full libraries = later GRC.
-  Project status: planned | active | on_hold | completed | archived
+  Project status (exact): draft | submitted | planned | active | on_hold | completed | archived
+  Daily open work: status=opened (hides archived + completed with paid project invoice)
   Billing model: retainer | time_and_materials | fixed_price
   Activity status: planned | in_progress | blocked | done | cancelled
 

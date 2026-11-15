@@ -44,7 +44,7 @@ Never invent or guess a key. Never use `ck_live_` or Client MCP `/mcp`.
 5b. **Weekly hours report:** see flow **D2**. Prefer `reports_tickets_hours` / `tickets.hours` with explicit `from_date`/`to_date` when the pack uses a custom week (e.g. Friday Berlin cutover). Fall back to `tickets_get` → `hours_logged` / `billing_status` / `billing.retainer_hours`.
 6. **Assignment:** `technician_id` / `assigned_to` = Django **user PK** (`technicians[].user_id`), not TenantUser UUID.
 7. **Exact prices / service offers:** For “what do we charge client X?” or drafting an offer, call **`clients_service_prices(client_id)`** (alias **`clients_offer_prices`**). Quote `services[].rate` (that client’s EUR/h). Require `prices_included=true` and non-empty `services[]` / `services_tsv`. **Never** use `clients_pack` or summary-only responses for unit prices.
-8. **Retainers / recurring (critical):** Do **not** call `projects_create` for monthly retainers or recurring payments. Use catalog tools to **draft a document in this AI chat**, then tell staff to create the recurring charge in the **web console** (**Finance & Accounting → Finance → Recurring charges**, pick the client). One-time delivery projects only via `projects_create`. Clients may still create draft projects via Client MCP.
+8. **Retainers / recurring (critical):** Do **not** call `projects_create` for monthly retainers or recurring payments. Use catalog tools to **draft a document in this AI chat**, then tell staff to create the recurring charge in the **web console** (**Finance & Accounting → Finance → Recurring charges**, pick the client). One-time delivery projects only via `projects_create` **with `activities=[{service_rate_id,…}]` (≥1)** — never dump checklists / “is complete when” into `description`. Clients may still create draft projects via Client MCP.
 9. **Stale tools:** If catalog/price tools are missing from the host registry, tell the user to **reconnect / re-add** Tenant MCP — do not invent rates.
 10. **Permissions:** Respect API errors for missing `can_*` or disabled modules (e.g. projects 403); tell the user which flag/module is needed.
 11. **Invoice email / reminders:** `invoices_send_email` then (only after that send) `invoices_set_reminders`. Never enable reminders on an unsent invoice.
@@ -95,9 +95,9 @@ If MCP tools are unavailable, say so and do not pretend the action succeeded.
 1. Confirm the work is a finite delivery (not ongoing retainer).
 2. `clients_resolve` → `client_id`.
 3. **`clients_service_prices(client_id)`** (page if `has_more`) — required before activities.
-4. Confirm → `projects_create(name, client=…)` (do not invent `default_hourly_rate`; prefer `time_and_materials` / `fixed_price`, not `retainer`).
-5. **`project_activities_create(project=…, service_rate_id=<catalog id>)`** — **required** `service_rate_id`; optional staff `hourly_rate` override.
-6. Optional materials → `projects_set_offer_validity` → `projects_offer_pdf`.
+4. Break the plan into **activities** (one catalog line + name/hours each). `description` = short objective only — **never** dump checklists, numbered controls, or “is complete when” into description.
+5. Confirm → **`projects_create(name, client=…, activities=[{service_rate_id, name?, estimated_hours?}…])`** — **activities ≥1 required in the same call** (do not invent `default_hourly_rate`; prefer `time_and_materials` / `fixed_price`, not `retainer`).
+6. Optional extras via `project_activities_create` / materials → `projects_set_offer_validity` → `projects_offer_pdf`.
 7. Client-submitted awaiting review: confirm → `projects_approve(project_id)` (`submitted` → `planned`), or Approve in web Project List.
 8. When delivery is done: confirm → `projects_complete(project_id)` (or web **Mark complete**) — applies plan hours/rates, then proforma.
 
