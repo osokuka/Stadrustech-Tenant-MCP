@@ -41,6 +41,8 @@ Never use Client MCP (`/mcp`) or `ck_live_` keys.
 
 **Credential vault stubs (planned):** When assessment finds a server with credentials, `clients_vault_stubs_create` / `clients_process_vault_stubs_create` create **empty** placeholders (title/kind/host only). MCP **never** accepts passwords — operators populate secrets in web Client → Vault. Optional `clients_vault_stubs_list` (metadata only).
 
+**Non-principal org people (per client, when needed):** `people_template(client_id)` → confirm → `people_create` or `people_onboard` (optional asset/service links). List/update/offboard: `people_list` / `people_get` / `people_update` / `people_offboard`. These are **not** portal users — never mix with Principal Users. Needs `assets` module.
+
 **Exact service prices (per client SLA):** `clients_resolve` → **`clients_service_prices(client_id)`** / **`clients_offer_prices(client_id)`**  
 Expect `prices_included=true`, `services[]` with `rate` (**exact client EUR/h to quote**), `eu` (EU list reference), `id`, `code`, `name`, plus `services_tsv`. Default page `limit=80`; if `has_more`, call with `offset=next_offset` (or `limit=250`).  
 Other aliases: `clients_service_catalog`, `clients_services`. `services_list(client=…)` same; `services_list()` with no client → summaries only.
@@ -89,6 +91,9 @@ Other aliases: `clients_service_catalog`, `clients_services`. `services_list(cli
 | `clients_process_update` | **Save** `{items:[{id,answer,notes}], date, assessor}` — overflow facts in `notes` |
 | `clients_process_complete` | Mark questionnaire completed |
 | `clients_process_abandon` | Abandon in-progress run |
+| `people_template` / `people_list` / `people_get` | Non-principal org people field guide / list / detail |
+| `people_create` / `people_update` | Create or patch a non-portal org person for a client |
+| `people_onboard` / `people_offboard` | Create + link assets/services; soft-deactivate with checklist |
 | `clients_service_catalog` | Full priced catalog page (default limit 80; page via offset) |
 | `clients_services` | Alias of `clients_service_catalog` |
 | `services_list` / `services_get` | `client=` → priced; no client → `by_client[]` summaries |
@@ -109,6 +114,23 @@ Other aliases: `clients_service_catalog`, `clients_services`. `services_list(cli
 | `projects_offer_pdf` / `_html` / `_xlsx` | Commercial offer export |
 | `project_activities_list` / `_create` / `_update` | Activities — **create requires `service_rate_id` from catalog** |
 | `project_materials_list` / `_create` / `_update` | Materials/BOM |
+
+### GRC (module `grc`, flags `can_read_grc` / `can_write_grc`)
+
+Canonical spine: `GRC_MODULE.md` §2.2 — obligation + **one enclave** (in/out assets) + work **contributions** → SSP/KPI.
+
+| Tool | Purpose |
+|------|---------|
+| `grc_frameworks_list` | Published framework packs |
+| `grc_assignment_create` / `grc_assignment_update` | Assign pack; target date / notes; planned **active vs watch** |
+| `grc_implementations_list` / `grc_implementation_update` | Control status/notes + planned dates |
+| `grc_control_gantt` / `grc_gaps` / `grc_dashboard` / `grc_ssp_*` | Gaps, schedule, SSP |
+| `grc_obligation_*` | Contractual required-control baselines (L1 then graduate L2) |
+| **Planned** `grc_enclave_*` | Upsert enclave; list members; **move assets in↔out**; undeclared; bulk set |
+| **Planned** `compliance_contribution_*` / create-work `compliance_controls[]` | Stamp ticket/project → control + enclave for KPI |
+| **Planned** `grc_compliance_kpi` | Required %, work-backed, undeclared, affirmation-ready |
+
+Reconnect Tenant MCP after deploy so new tools appear.
 
 ### Reports
 

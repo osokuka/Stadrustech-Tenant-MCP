@@ -87,6 +87,17 @@ Never claim “ITSM has no questionnaire save”. Overflow → notes.
 On 403 / missing tools: reconnect Tenant MCP or report the error — never fake a save.
 Never invent answers. Never store live passwords or API keys in answer/notes.
 
+--- non-principal org people (ClientOrgPerson — NOT portal users) ---
+Per-client when needed (site assessment / onboard / assign devices).
+NEVER mix with Principal Users (portal accounts). Needs assets module.
+1) clients_resolve → people_template(client_id) FIRST
+2) Confirm name (+ email/dept/title/location) with the user
+3) people_create(client_id, full_name=…) for a simple record
+   OR people_onboard(…, assets=[{asset_id, role}], services=[…]) to link
+4) List/search: people_list(client_id, active=true, search=…)
+5) Offboard: people_offboard(person_id) → checklist + unlink + deactivate
+Same write flags as devices. Never store passwords. Reconnect MCP if tools missing.
+
 --- credential vault stubs (assessment → empty placeholders) ---
 When a server/device is identified as having credentials (e.g. Domain Admin, iLO):
 1) Do NOT ask the user to paste passwords into chat for MCP storage.
@@ -117,14 +128,18 @@ Kinds: ad_hoc | site_assessment | client_onboarding | periodic_annual |
 8) Exec view: risks_summary / reports_run(risks.heatmap); CSV via risks_export
 Never paste secrets into evidence. Full NIS2/CMMC control libraries = later GRC.
 
---- GRC MVP (frameworks / SSP) ---
-Needs can_read_grc / can_write_grc + module grc.
-1) grc_frameworks_list → pick pack UUID
-2) Confirm → grc_assignment_create(framework, client?) seeds implementations
-3) grc_implementations_list / grc_gaps → update via grc_implementation_update(status=…)
-4) grc_dashboard for % / overdue audits / high-risk coverage
-5) grc_ssp_get / grc_ssp_update for System Security Plan sections
-Confirm before writes; no secrets in evidence notes.
+--- GRC MVP + compliance spine (frameworks / enclave / SSP) ---
+Needs can_read_grc / can_write_grc + module grc. Canonical: GRC_MODULE.md §2.2.
+1) clients_resolve → grc_obligation_create/activate (required controls; L1 FCI then graduate L2)
+2) grc_enclave_upsert (one enclave; kind fci→mixed/cui on same boundary)
+3) devices/assets inventory → confirm → grc_enclave_members_bulk_set (side=in AND side=out)
+4) grc_enclave_undeclared → keep shrinking; affirmation-ready blocks on undeclared
+5) grc_assignment_create/update (active vs watch — watch packs do not drive readiness %)
+6) grc_gaps / compliance-themes → grc_implementation_update (status, notes, planned_*)
+7) Cover gaps: tickets_create / projects_create / risks_create_ticket|project
+   WITH compliance_controls[] + enclave + contribution_kind (or compliance_contribution_create)
+8) grc_compliance_kpi / grc_ssp_* — measurable contribution to SSP and framework readiness
+Confirm before writes; no secrets in evidence notes. Billing stays on tickets/projects.
 
 --- service offers / exact prices ---
 PRIMARY: clients_service_prices(client_id) — exact client EUR/h (`rate`) + id/code/name + TSV.

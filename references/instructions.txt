@@ -179,6 +179,13 @@ TYPICAL FLOWS:
     List/update: devices_list / devices_get / devices_update.
     Never invent devices; never put passwords in metadata (vault stubs for secrets).
     If devices_* tools missing: reconnect Tenant MCP. Needs assets module enabled.
+  Non-principal org people (module assets — per client when needed):
+    ClientOrgPerson = employee who uses assets/services but is NOT a portal user.
+    NEVER create Principal Users / portal logins via these tools.
+    people_template(client_id) FIRST → confirm → people_create (simple) OR
+    people_onboard(assets/services links). List/update/offboard: people_list /
+    people_get / people_update / people_offboard.
+    If people_* tools missing: reconnect Tenant MCP. Needs assets module enabled.
   Credential vault stubs (when assessment finds a server with credentials):
     clients_vault_stubs_create / clients_process_vault_stubs_create — EMPTY placeholders
       (title, kind, host, username hint only). List via clients_vault_stubs_list.
