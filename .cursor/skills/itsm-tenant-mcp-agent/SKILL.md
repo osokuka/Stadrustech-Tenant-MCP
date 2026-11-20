@@ -48,7 +48,7 @@ Never invent or guess a key. Never use `ck_live_` or Client MCP `/mcp`.
 9. **Stale tools:** If catalog/price tools are missing from the host registry, tell the user to **reconnect / re-add** Tenant MCP — do not invent rates.
 10. **Permissions:** Respect API errors for missing `can_*` or disabled modules (e.g. projects 403); tell the user which flag/module is needed.
 11. **Invoice email / reminders:** `invoices_send_email` then (only after that send) `invoices_set_reminders`. Never enable reminders on an unsent invoice.
-12. **Non-principal org people:** `people_template(client_id)` → confirm → `people_create` or `people_onboard`. These are **not** portal (principal) users — never mix. List/update/offboard: `people_list` / `people_get` / `people_update` / `people_offboard`. Module `assets`.
+12. **Non-principal org people:** `people_template(client_id)` → confirm → `people_create` or `people_onboard` (aliases: `non_principal_users_*`). These are **not** portal (principal) users — never mix. List/update/offboard: `people_list` / `people_get` / `people_update` / `people_offboard`. Module `assets`. If host tool list lacks these (~82 tools = stale cache), remove and re-add Tenant MCP.
 
 If MCP tools are unavailable, say so and do not pretend the action succeeded.
 

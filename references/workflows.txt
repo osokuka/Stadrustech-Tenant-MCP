@@ -87,16 +87,19 @@ Never claim “ITSM has no questionnaire save”. Overflow → notes.
 On 403 / missing tools: reconnect Tenant MCP or report the error — never fake a save.
 Never invent answers. Never store live passwords or API keys in answer/notes.
 
---- non-principal org people (ClientOrgPerson — NOT portal users) ---
+--- non-principal org people / Non-principal Users (NOT portal users) ---
 Per-client when needed (site assessment / onboard / assign devices).
 NEVER mix with Principal Users (portal accounts). Needs assets module.
-1) clients_resolve → people_template(client_id) FIRST
+Tool names (aliases — same API): people_*  OR  non_principal_users_*
+1) clients_resolve → people_template / non_principal_users_template FIRST
 2) Confirm name (+ email/dept/title/location) with the user
-3) people_create(client_id, full_name=…) for a simple record
-   OR people_onboard(…, assets=[{asset_id, role}], services=[…]) to link
-4) List/search: people_list(client_id, active=true, search=…)
-5) Offboard: people_offboard(person_id) → checklist + unlink + deactivate
-Same write flags as devices. Never store passwords. Reconnect MCP if tools missing.
+3) people_create / non_principal_users_create(client_id, full_name=…)
+   OR *_onboard(…, assets=[{asset_id, role}], services=[…]) to link
+4) List/search: people_list / non_principal_users_list(client_id, active=true, search=…)
+5) Offboard: people_offboard / non_principal_users_offboard(person_id)
+Same write flags as devices. Never store passwords.
+If host still shows ~82 tools and no people_* / non_principal_users_*:
+  remove + re-add Tenant MCP (stale cache); live server exposes these tools.
 
 --- credential vault stubs (assessment → empty placeholders) ---
 When a server/device is identified as having credentials (e.g. Domain Admin, iLO):

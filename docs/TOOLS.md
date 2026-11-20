@@ -94,6 +94,7 @@ Other aliases: `clients_service_catalog`, `clients_services`. `services_list(cli
 | `people_template` / `people_list` / `people_get` | Non-principal org people field guide / list / detail |
 | `people_create` / `people_update` | Create or patch a non-portal org person for a client |
 | `people_onboard` / `people_offboard` | Create + link assets/services; soft-deactivate with checklist |
+| `non_principal_users_*` | Aliases of `people_*` (UI: Non-principal Users) |
 | `clients_service_catalog` | Full priced catalog page (default limit 80; page via offset) |
 | `clients_services` | Alias of `clients_service_catalog` |
 | `services_list` / `services_get` | `client=` → priced; no client → `by_client[]` summaries |
